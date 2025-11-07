@@ -1,4 +1,4 @@
 .LDM/*
 build/*
-dist/*
+dist/.user_info
 main_window.spec
