@@ -11,6 +11,6 @@ you can activate it \
 and run \
 `pyinstaller --onefile --windowed --add-data "atomic_mass.txt:." main_window.py` \
 to create the executable. \
-It creates the executable in `dist/` for the current operative system (Windows or Linux).
+It creates the executable in `dist/` called `main_window` for the current operative system (Windows or Linux).
  
 In [Pictures](./pictures) you can find examples of the application.
