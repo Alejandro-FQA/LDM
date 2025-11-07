@@ -1,1 +1,2 @@
 dist/main_window filter=lfs diff=lfs merge=lfs -text
+dist/main_window.exe filter=lfs diff=lfs merge=lfs -text
