@@ -21,14 +21,21 @@ from scipy.signal import argrelmin
 
 import requests
 import subprocess
+import importlib
+
 
 # Custom imports
 from app_state import AppState
 from elements_diccionaries import elements_label as els_lab
-import activity2_cat
+# import activity2_cat
 import user_config as uc
 from ldm_model import ldm_model
 from element import Element
+
+def load_activity_module(language: str, activity_number: int):
+    module_path = f"activities.{language}.activity{activity_number}_{language}"
+    module = importlib.import_module(module_path)
+    return module
 
 # -----------------------------
 # Tab 2: Heaviest isotopes
@@ -54,6 +61,7 @@ class activity2_tab(QWidget):
         ]
 
         # Default activity
+        self.activity_mod = load_activity_module(self.state.language, 2)
         self.activity_index = 0
         self.activity_text = {}
 
@@ -252,10 +260,7 @@ class activity2_tab(QWidget):
         # Text box on the right with instructions
 
         num = 2
-        activity = activity2_cat.get_activity(num, 
-                                           self.state.element, 
-                                           self.state.params,
-                                           self.state.language)
+        activity = self.activity_mod.get_activity(self.state)
         self.toolbox = QToolBox()
                 
         self.activity_index = self.toolbox.currentIndex()
@@ -346,7 +351,7 @@ class activity2_tab(QWidget):
         # Create a popup message box
         msg = QMessageBox(self)
         msg.setWindowTitle("-- Informació --")
-        msg.setText(activity2_cat.get_info())
+        msg.setText(self.activity_mod.get_info())
         msg.setIcon(QMessageBox.Information)
 
         msg.exec_()  # This call blocks until the popup is closed
@@ -371,6 +376,8 @@ class activity2_tab(QWidget):
         self.label1.setText(els_lab.get(language))
         # Update elements box
         self.update_elements_box()
+        # Update language
+        self.update_language()
         # Update text
         self.update_text()
     
@@ -698,16 +705,16 @@ class activity2_tab(QWidget):
                              color='limegreen',
                              alpha=0.2)
             
+    def update_language(self):
+        self.activity_mod = load_activity_module(self.state.language, 2)
+
     def update_text(self):
         # Update text when there's
         # a change of language or 
         # a change of element
 
         # Get updated activity content
-        activity = activity2_cat.get_activity(2, 
-                                           self.state.element, 
-                                           self.state.params,
-                                           self.state.language)
+        activity = self.activity_mod.get_activity(self.state)
         
         for section_key, _ in self.sections: 
             scrollbar = self.activity_text[section_key].verticalScrollBar()
