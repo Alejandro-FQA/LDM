@@ -84,10 +84,10 @@ class LDMTab(QWidget):
         element_layout.addWidget(self.language_box, stretch=1)        
 
         # Fill the list of elements
-        languages_list = ["CAT", "ES", "EN"]
-        self.language_box.addItems(languages_list)
+        self.languages_list = ["CAT", "ES", "EN"]
+        self.language_box.addItems(self.languages_list)
         # Select default element and update it
-        self.language_box.setCurrentIndex(languages_list.index(self.state.language))
+        self.language_box.setCurrentIndex(self.languages_list.index(self.state.language))
 
         # Create list of elements  
         self.language_box.setMaxVisibleItems(10)  # Show max 10 items at once
@@ -319,12 +319,16 @@ class LDMTab(QWidget):
 
     def on_language_changed(self, language):
         """When language changes, update UI texts."""
+        # Update language
+        self.update_language()
+        # Update language box
+        self.language_box.blockSignals(True)
+        self.language_box.setCurrentIndex(self.languages_list.index(self.state.language))
+        self.language_box.blockSignals(False)
         # Update label
         self.label1.setText(els_lab.get(language))
         # Update elements box
         self.update_elements_box()
-        # Update language
-        self.update_language()
         # Update text
         self.update_text()
     
