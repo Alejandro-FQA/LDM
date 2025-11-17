@@ -2,5 +2,5 @@
 build/*
 dist/.user_info
 main_window.spec
-user_info
+.user_info
 __pycache__
