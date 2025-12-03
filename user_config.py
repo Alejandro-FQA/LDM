@@ -77,6 +77,7 @@ def read_user_info():
 
 def connect2server(user_id):
     url = "https://mgl.kermansiii.ovh/create_group"
+    # url = "http://161.116.81.37:5001"
     group = None
 
     try:
