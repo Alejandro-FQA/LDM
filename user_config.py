@@ -76,8 +76,8 @@ def read_user_info():
         return {}
 
 def connect2server(user_id):
-    url = "https://mgl.kermansiii.ovh/create_group"
-    # url = "http://161.116.81.37:5001"
+    # url = "https://mgl.kermansiii.ovh/create_group"
+    url = "http://161.116.81.37:5001/create_group"
     group = None
 
     try:
@@ -176,7 +176,8 @@ def load_user_params(state):
     return user_data.get(element)
 
 def send2server():
-    url = 'https://mgl.kermansiii.ovh/send'
+    # url = 'https://mgl.kermansiii.ovh/send'
+    url = "http://161.116.81.37:5001/send"
     data = read_user_info()
 
     try:
