@@ -81,7 +81,7 @@ def connect2server(user_id, url):
     data = read_user_info()
 
     user_id = str(user_id)
-    data[user_id]["url"] = url
+    data["url"] = url
 
     print('URL saved')
 
@@ -179,7 +179,7 @@ def load_url(id):
     except json.JSONDecodeError:
         return None
         
-    return data[str(id)]['url']
+    return data['url'] if 'url' in data else None
 
 def load_user_params(state):
     """Load saved parameters for this user ID and current element, if available."""

@@ -96,36 +96,37 @@ def create_messages():
     global messages
     complete_data = []
     for key in list(received_results.keys())[1:]:
-        for elem in list(received_results.get(key)):
-            aA = received_results.get(key).get(elem).get('params').get('a_a',0)
-            aV = received_results.get(key).get(elem).get('params').get('a_v',0)
-            aminaa = received_results.get(key).get(elem).get('ranges').get('A_min_a_a',0)
-            amaxaa = received_results.get(key).get(elem).get('ranges').get('A_max_a_a',0)
-            aminav = received_results.get(key).get(elem).get('ranges').get('A_min_a_v',0)
-            amaxav = received_results.get(key).get(elem).get('ranges').get('A_max_a_v',0)
-            group_id = groups[key]
-            element = elem
-            
-            # Get username from session (not implemented)
-            username = session.get('username', 'Anonymous')
-                        
-            print(f"Received message from user: {username}")
+        if key != 'url':
+            for elem in list(received_results.get(key)):
+                aA = received_results.get(key).get(elem).get('params').get('a_a',0)
+                aV = received_results.get(key).get(elem).get('params').get('a_v',0)
+                aminaa = received_results.get(key).get(elem).get('ranges').get('A_min_a_a',0)
+                amaxaa = received_results.get(key).get(elem).get('ranges').get('A_max_a_a',0)
+                aminav = received_results.get(key).get(elem).get('ranges').get('A_min_a_v',0)
+                amaxav = received_results.get(key).get(elem).get('ranges').get('A_max_a_v',0)
+                group_id = groups[key]
+                element = elem
+                
+                # Get username from session (not implemented)
+                username = session.get('username', 'Anonymous')
+                            
+                print(f"Received message from user: {username}")
 
-            if group_id:
-                message_data = {
-                    #'text': message,
-                    'username': username,
-                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'aA': aA,
-                    'aV': aV,
-                    'element': element,
-                    'group_id': group_id,
-                    'A_min_a_a': aminaa,
-                    'A_max_a_a': amaxaa,
-                    'A_min_a_v': aminav, 
-                    'A_max_a_v': amaxav,
-                }
-                complete_data.append(message_data)
+                if group_id:
+                    message_data = {
+                        #'text': message,
+                        'username': username,
+                        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        'aA': aA,
+                        'aV': aV,
+                        'element': element,
+                        'group_id': group_id,
+                        'A_min_a_a': aminaa,
+                        'A_max_a_a': amaxaa,
+                        'A_min_a_v': aminav, 
+                        'A_max_a_v': amaxav,
+                    }
+                    complete_data.append(message_data)
                 
     # Emit the new message to all connected clients
     print(f"Emitting message to all clients: {complete_data}")

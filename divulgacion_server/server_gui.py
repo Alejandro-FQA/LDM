@@ -303,17 +303,28 @@ class ServerGUI(QMainWindow):
         except Exception as e:
             self.messages_display.append(f"Error refreshing messages: {str(e)}")
     
+    def get_local_ip(self):
+        """Get the local IP address"""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            return local_ip
+        except:
+            return "localhost"
+
     def copy_url(self):
         """Copy server URL to clipboard"""
-        url = self.url_label.text()
+        url = f'http://{self.get_local_ip()}'
         if url != "Server not started":
             clipboard = QApplication.clipboard()
             clipboard.setText(url)
             self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] URL copied to clipboard")
-            
+                    
     def open_in_browser(self):
         """Open server URL in default browser"""
-        url = self.url_label.text()
+        url = f'http://{self.get_local_ip()}:5001'
         if url != "Server not started":
             webbrowser.open(url)
             self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] Opening {url} in browser")
