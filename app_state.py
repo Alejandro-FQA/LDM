@@ -29,7 +29,8 @@ class AppState(QObject):
         self.language = "CAT"
         self.id = uc.ensure_user_info_file(np.random.randint(10**5))
         self._group = None
-        self.server_url = 'None'
+        self.server_url = None
+        self._is_connected = False
 
         # Default activity
         self.current_tab = 0
@@ -78,9 +79,9 @@ class AppState(QObject):
     def is_connected(self):
         return self._group
 
-    @group.setter
-    def group(self, value):
+    @is_connected.setter
+    def is_connected(self, value):
         if value != self._group:
-            self._group = value
-            self.groupChanged.emit(value)
+            self._is_connected = value
+            self.connectionChanged.emit(value)
    

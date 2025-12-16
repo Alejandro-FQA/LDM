@@ -76,6 +76,19 @@ def read_user_info():
         return {}
 
 def connect2server(user_id, url):
+
+    path = get_user_info_path()
+    data = read_user_info()
+
+    user_id = str(user_id)
+    data[user_id]["url"] = url
+
+    print('URL saved')
+
+    # Save JSON back to file
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
     url_group = f'{url}/create_group'
     group = None
 
@@ -103,7 +116,7 @@ def connect2server(user_id, url):
         print(f"Error creating group: {e}")
         group = None
 
-    return group
+    return group  
 
 def save_user_data(self):
     """Save current element parameters under this user ID in .user_info."""
@@ -154,6 +167,19 @@ def save_user_data(self):
         json.dump(data, f, indent=2)
     
     print('Data saved successfully.')
+
+def load_url(id):
+    """Load saved URL for this user ID, if available."""
+    path = get_user_info_path()
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError:
+        return None
+        
+    return data[str(id)]['url']
 
 def load_user_params(state):
     """Load saved parameters for this user ID and current element, if available."""

@@ -9,7 +9,7 @@ from PyQt5.QtGui import QPainter, QBrush, QColor
 
 
 from app_state import AppState
-from user_config import connect2server
+from user_config import connect2server, load_url
 
 
 class StatusIndicator(QLabel):
@@ -80,7 +80,11 @@ class LogsTab(QWidget):
         
         # Server URL input field
         self.server_input = QLineEdit()
-        self.server_input.setPlaceholderText("Enter server URL (e.g., http://localhost:8080)")
+        self.state.server_url  = load_url(self.state.id)
+        if not self.state.server_url:
+            self.server_input.setPlaceholderText("Enter server URL (e.g., http://localhost:8080)")
+        else:
+            self.server_input.setText(self.state.server_url)
         self.server_input.setMinimumWidth(300)  # Make it reasonably wide
         control_layout.addWidget(self.server_input)
         
@@ -130,6 +134,7 @@ class LogsTab(QWidget):
         
         if self.is_connected:
             self.connect_btn.setText("Connected")
+            self.connect_btn.setEnabled(False)
             print(f"Connected to server: {self.state.server_url}")
             print(f"Assigned to group: {self.state.group}")
         else:
