@@ -8,6 +8,10 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPainter, QBrush, QColor
 
 
+from app_state import AppState
+from user_config import connect2server
+
+
 class StatusIndicator(QLabel):
     """Simple circular status indicator (red/green)."""
     def __init__(self, parent=None):
@@ -58,9 +62,12 @@ class EmittingStream:
 
 class LogsTab(QWidget):
     """Shows all app print() output and errors live."""
-    def __init__(self):
+    def __init__(self, app_state: AppState):
         super().__init__()
         
+        # App_state info
+        self.state = app_state
+
         # Main layout
         main_layout = QVBoxLayout(self)
         
@@ -110,21 +117,21 @@ class LogsTab(QWidget):
     
     def on_connect_clicked(self):
         """Slot for connect button click."""
-        server_url = self.server_input.text().strip()
-        if not server_url:
+        self.state.server_url = self.server_input.text().strip()
+        if not self.state.server_url:
             print("Error: Please enter a server URL")
-            return
-        
+            return        
+    
         # Toggle connection state for demonstration
         # In your real implementation, you'll connect to the actual server
-        self.is_connected = not self.is_connected
+        self.state.group = connect2server(user_id=self.state.id, url=self.state.server_url)
+        self.is_connected = self.state.group is not None
         self.status_indicator.set_connected(self.is_connected)
         
         if self.is_connected:
-            self.connect_btn.setText("Disconnect")
-            print(f"Connecting to server: {server_url}")
-            # Here you would implement your actual connection logic
+            self.connect_btn.setText("Connected")
+            print(f"Connected to server: {self.state.server_url}")
+            print(f"Assigned to group: {self.state.group}")
         else:
             self.connect_btn.setText("Connect")
-            print(f"Disconnected from server: {server_url}")
-            # Here you would implement your disconnection logic
+            print(f"Disconnected from server: {self.state.server_url}")

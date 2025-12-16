@@ -63,20 +63,21 @@ class PlotWindow(QMainWindow):
         self.tabs = QTabWidget()
         layout.addWidget(self.tabs)
 
-        # Terminal tab
-        self.terminal_tab = LogsTab()
-
         # Signal only to active tab
         self.tabs.currentChanged.connect(self.on_tab_changed)
 
         # Initialize common environment
         self.state = AppState()
-        self.setWindowTitle(f"Nuclear Masterclass - Group {self.state.group}")
+
+        # 🔌 CONNECT STATE SIGNALS
+        self.state.groupChanged.connect(self.update_title)
+        # Set initial title
+        self.update_title()
 
         # Tab 1 and 2: Interactive LDM model
         self.tabs.addTab(LDMTab(self.state), "Activitat 1")
         self.tabs.addTab(activity2_tab(self.state), "Activitat 2")        
-        self.tabs.addTab(self.terminal_tab, "Logs")
+        self.tabs.addTab(LogsTab(self.state), "Logs")
 
         # Tab 3–5: simple placeholders
         # A = np.random.rand(1,20)
@@ -84,6 +85,10 @@ class PlotWindow(QMainWindow):
         # colors = ["red", "green", "purple"]
         # for i, c in enumerate(colors, start=3):
         #     self.tabs.addTab(SimplePlotTab(A, B, color=c, title=f"Activitat {i}"), f"Activitat {i}")
+
+    def update_title(self):
+        """Update window title with current group."""
+        self.setWindowTitle(f"Nuclear Masterclass - Group {self.state.group}")
 
     def on_tab_changed(self, index):
         # Disable updates in all tabs

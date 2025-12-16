@@ -75,20 +75,19 @@ def read_user_info():
     except json.JSONDecodeError:
         return {}
 
-def connect2server(user_id):
-    # url = "https://mgl.kermansiii.ovh/create_group"
-    url = "http://161.116.81.37:5001/create_group"
+def connect2server(user_id, url):
+    url_group = f'{url}/create_group'
     group = None
 
     try:
         # Optional: quick check before sending
-        response = requests.head(url, timeout=3)
+        response = requests.head(url_group, timeout=3)
         if response.status_code >= 400:
             print(f"Server reachable but returned {response.status_code}")
             return None
 
         # Now try to post the data
-        response = requests.post(url, json={"ID": str(user_id)}, timeout=5)
+        response = requests.post(url_group, json={"ID": str(user_id)}, timeout=5)
         response.raise_for_status()  # Raise error for 4xx/5xx responses
         group = int(response.json().get('group_id'))
         print("Data successfully sent to server.")
@@ -175,20 +174,19 @@ def load_user_params(state):
 
     return user_data.get(element)
 
-def send2server():
-    # url = 'https://mgl.kermansiii.ovh/send'
-    url = "http://161.116.81.37:5001/send"
+def send2server(url):
+    url_send = f'{url}/send'
     data = read_user_info()
 
     try:
         # Optional: quick check before sending
-        response = requests.head(url, timeout=3)
+        response = requests.head(url_send, timeout=3)
         if response.status_code >= 400:
             print(f"Server reachable but returned {response.status_code}")
             return False
 
         # Now try to post the data
-        response = requests.post(url, json=data, timeout=5)
+        response = requests.post(url_send, json=data, timeout=5)
         response.raise_for_status()  # Raise error for 4xx/5xx responses
         print("Data successfully sent to server.")
         return True

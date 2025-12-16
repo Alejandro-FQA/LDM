@@ -15,6 +15,8 @@ class AppState(QObject):
     parameterChanged = pyqtSignal(str, object)
     languageChanged = pyqtSignal(str)
     elementChanged = pyqtSignal()
+    groupChanged = pyqtSignal(int)
+    connectionChanged = pyqtSignal(bool)
 
     def __init__(self):
         super().__init__()
@@ -26,7 +28,8 @@ class AppState(QObject):
         # User inteface
         self.language = "CAT"
         self.id = uc.ensure_user_info_file(np.random.randint(10**5))
-        self.group = uc.connect2server(self.id)
+        self._group = None
+        self.server_url = 'None'
 
         # Default activity
         self.current_tab = 0
@@ -61,4 +64,23 @@ class AppState(QObject):
         self.element = Element(element, self.data, self.language)
         self.elementChanged.emit()
 
+    @property
+    def group(self):
+        return self._group
+
+    @group.setter
+    def group(self, value):
+        if value != self._group:
+            self._group = value
+            self.groupChanged.emit(value)
+
+    @property
+    def is_connected(self):
+        return self._group
+
+    @group.setter
+    def group(self, value):
+        if value != self._group:
+            self._group = value
+            self.groupChanged.emit(value)
    

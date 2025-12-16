@@ -434,11 +434,11 @@ class activity2_tab(QWidget):
         # Ensure there are some parameters of current element
         # otherwise, save current parameters
         if uc.anyData(self.state):
-            uc.send2server()
+            uc.send2server(self.state.server_url)
         else:
             uc.save_user_data(self)
             self.update_load_button()
-            uc.send2server()
+            uc.send2server(self.state.server_url)
 
     def on_activity_changed(self, index):
         # Update plots
