@@ -4,5 +4,5 @@ dist/.user_info
 main_window.spec
 .user_info
 __pycache__
-divulgacion_server/*
+divulgacion_server/__pycache__
 divulgacion_server.zip
