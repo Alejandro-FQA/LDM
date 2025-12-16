@@ -11,10 +11,12 @@ In [Pictures](./pictures) you can find examples (in Catalan) of the application.
 To compile the latest executables follow these instructions:
 
 1) create the Python environoment \
-`conda env create --prefix ./.LDM -f environment.yml` 
+`conda create --prefix ./.LDM python=3.11 -y` 
 2) activate the environment \
 `conda activate ./.LDM` 
-3) run the command \
+3) load the requirements \
+`pip install -r requirements.txt`
+4) run the command \
 `pyinstaller --onefile --windowed --add-data "atomic_mass.txt:." main_window.py` 
 
 These steps create the executable `main_window` in the directory `dist/` for the current operative system (Windows or Linux).
