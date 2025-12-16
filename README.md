@@ -19,9 +19,8 @@ To compile the latest executables follow these instructions:
 4) run the command \
 `pyinstaller --onefile --windowed --add-data "atomic_mass.txt:." main_window.py` 
 
-These steps create the executable `main_window` in the directory `dist/` for the current operative system (Windows or Linux).
- \
- It is assumed that you previously downloaded the repository and have conda, Python and pyinstaller installed.
+These steps create the executable `main_window` in the directory `dist/` for the current operative system (Windows or Linux). \
+It is assumed that you previously downloaded the repository and have conda, Python and pyinstaller install.
 
- We are happy to hear any feedback!
+We are happy to hear any feedback!
 
