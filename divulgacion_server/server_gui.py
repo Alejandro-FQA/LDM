@@ -100,7 +100,7 @@ class ServerGUI(QMainWindow):
         
     def init_ui(self):
         self.setWindowTitle('Flask Server Controller')
-        self.setGeometry(100, 100, 900, 700)
+        self.setGeometry(100, 100, 500, 700)
         
         # Create central widget and main layout
         central_widget = QWidget()
@@ -316,7 +316,7 @@ class ServerGUI(QMainWindow):
 
     def copy_url(self):
         """Copy server URL to clipboard"""
-        url = f'http://{self.get_local_ip()}'
+        url = f'http://{self.get_local_ip()}:5001'
         if url != "Server not started":
             clipboard = QApplication.clipboard()
             clipboard.setText(url)
