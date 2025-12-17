@@ -1,26 +1,49 @@
+import os
+import sys
+import socket
+import threading
+import signal
+from datetime import datetime
+
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from flask_socketio import SocketIO, emit
-from datetime import datetime
-import threading
 
-import socket
-import signal
-import sys
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'divulgacion_2025'
+def create_app():
+    # Determine the correct template folder depending on frozen or normal run
+    if getattr(sys, 'frozen', False):
+        # PyInstaller bundle: templates are extracted to sys._MEIPASS/divulgacion_server/templates
+        template_folder = os.path.join(sys._MEIPASS, 'divulgacion_server', 'templates')
+    else:
+        # Development: relative to this file (server.py)
+        template_folder = os.path.join(os.path.dirname(__file__), 'templates')
 
-socketio = SocketIO(app, cors_allowed_origins="*", allow_headers=['Content-Type'], async_mode='threading')
+    app = Flask(__name__, template_folder=template_folder)
+    app.config['SECRET_KEY'] = 'divulgacion_2025'
 
-# Global variable to control server shutdown
+    return app
+
+
+# Create the Flask app
+app = create_app()
+
+# Initialize SocketIO with threading mode (most reliable with PyInstaller)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+# Global variables
 shutdown_flag = threading.Event()
-
-# Store messages in memory (in production, use a database)
 messages = []
+received_results = {}
+groups = {}
+group_counter = 0
+lock = threading.Lock()
+shutdown_requested = False
+server_thread = None
 
+
+# CORS headers for all responses
 @app.after_request
 def after_request(response):
-    """Add CORS headers to all responses"""
     origin = request.headers.get('Origin')
     if origin:
         response.headers.add('Access-Control-Allow-Origin', origin)
@@ -29,226 +52,193 @@ def after_request(response):
         response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     return response
 
+
+# SocketIO event handlers
 @socketio.on('connect')
 def handle_connect():
-    """Handle client connection"""
     print(f"Client connected: {request.sid}")
+
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    """Handle client disconnection"""
     print(f"Client disconnected: {request.sid}")
 
+
+# Routes
 @app.route('/')
 def index():
     return redirect(url_for('results_av'))
 
+
 @app.route('/results_av')
 def results_av():
-    """Results page showing all messages"""
     return render_template('results_final_av_cat.html')
+
 
 @app.route('/results_aa')
 def results_aa():
-    """Results page showing all messages"""
     return render_template('results_final_aa_cat.html')
+
 
 @app.route('/results_estable')
 def results_estable():
-    """Results page showing binding energy stability"""
     return render_template('results_final_estable_cat.html')
+
 
 @app.route('/download')
 def download():
     """
-    This can be used to download the .exe file
+    This can be used to download the .exe file (or any other file)
+    Adjust the path if needed.
     """
-    return send_file('interactive_plot2',as_attachment=True)
+    # Example: sending a file that is bundled as data
+    if getattr(sys, 'frozen', False):
+        file_path = os.path.join(sys._MEIPASS, 'interactive_plot2')
+    else:
+        file_path = os.path.join(os.path.dirname(__file__), 'interactive_plot2')
 
-group_counter = 0
-groups = {}
-lock = threading.Lock()
+    return send_file(file_path, as_attachment=True)
 
-@app.route("/create_group", methods=["POST", 'HEAD'])
+
+@app.route("/create_group", methods=["POST", "HEAD"])
 def create_group():
     if request.method == 'HEAD':
         return 'OK', 200
-    data = request.get_json()
-    print(data)
-    global group_counter
-    with lock:
-        try: 
-            # If group is created, return group
-            value = groups[data.get('ID')]
-            return jsonify({"group_id": value})
-        except:
-            # Create group if not
-            group_counter += 1
-            group_id = data.get('ID')
-            groups[group_id] = f'{group_counter}'
-            return jsonify({"group_id": f'{group_counter}'})
 
-received_results = {}
-messages = []
+    data = request.get_json()
+    client_id = data.get('ID')
+
+    with lock:
+        if client_id in groups:
+            return jsonify({"group_id": groups[client_id]})
+        else:
+            global group_counter
+            group_counter += 1
+            groups[client_id] = str(group_counter)
+            return jsonify({"group_id": str(group_counter)})
+
 
 def create_messages():
-    # Create the messages
+    """Rebuild the complete messages list from received_results"""
     global messages
     complete_data = []
-    for key in list(received_results.keys())[1:]:
-        if key != 'url':
-            for elem in list(received_results.get(key)):
-                aA = received_results.get(key).get(elem).get('params').get('a_a',0)
-                aV = received_results.get(key).get(elem).get('params').get('a_v',0)
-                aminaa = received_results.get(key).get(elem).get('ranges').get('A_min_a_a',0)
-                amaxaa = received_results.get(key).get(elem).get('ranges').get('A_max_a_a',0)
-                aminav = received_results.get(key).get(elem).get('ranges').get('A_min_a_v',0)
-                amaxav = received_results.get(key).get(elem).get('ranges').get('A_max_a_v',0)
-                group_id = groups[key]
-                element = elem
-                
-                # Get username from session (not implemented)
-                username = session.get('username', 'Anonymous')
-                            
-                print(f"Received message from user: {username}")
 
-                if group_id:
-                    message_data = {
-                        #'text': message,
-                        'username': username,
-                        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                        'aA': aA,
-                        'aV': aV,
-                        'element': element,
-                        'group_id': group_id,
-                        'A_min_a_a': aminaa,
-                        'A_max_a_a': amaxaa,
-                        'A_min_a_v': aminav, 
-                        'A_max_a_v': amaxav,
-                    }
-                    complete_data.append(message_data)
-                
-    # Emit the new message to all connected clients
-    print(f"Emitting message to all clients: {complete_data}")
+    # Skip the first key if it's something like 'url'
+    keys = [k for k in received_results.keys() if k != 'url']
+
+    for key in keys:
+        for elem in received_results[key]:
+            item = received_results[key][elem]
+            message_data = {
+                'username': session.get('username', 'Anonymous'),
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'aA': item.get('params', {}).get('a_a', 0),
+                'aV': item.get('params', {}).get('a_v', 0),
+                'element': elem,
+                'group_id': groups.get(key, '0'),
+                'A_min_a_a': item.get('ranges', {}).get('A_min_a_a', 0),
+                'A_max_a_a': item.get('ranges', {}).get('A_max_a_a', 0),
+                'A_min_a_v': item.get('ranges', {}).get('A_min_a_v', 0),
+                'A_max_a_v': item.get('ranges', {}).get('A_max_a_v', 0),
+            }
+            complete_data.append(message_data)
+
     messages = complete_data
-    socketio.emit('new_data', complete_data, namespace='/')
-    print(f"Message `emitted successfully")
+    socketio.emit('new_data', complete_data)
+
 
 @app.route('/send', methods=['POST', 'OPTIONS', 'HEAD'])
 def send_message():
-    """Handle message submission"""
     if request.method == 'HEAD':
-        return 'OK', 200 
-    # Handle OPTIONS preflight request
+        return 'OK', 200
     if request.method == 'OPTIONS':
         return '', 204
-    
+
     data = request.get_json()
-    group_id = str(data.get('ID'))
-    keys = list(data.get(group_id).keys())
-    params = data.get(group_id).get(keys[-1])
-    print(params)
+    group_id_key = str(list(data.keys())[0])  # The key is the client/group ID
+    inner_data = data[group_id_key]
+    latest_key = list(inner_data.keys())[-1]
+    params = inner_data[latest_key]
 
-    # Only send the last received element, not ideal...
-    aA = params.get('params').get('a_a',0)
-    aV = params.get('params').get('a_v',0)
-    aminaa = params.get('ranges',{0:0}).get('A_min_a_a',0)
-    amaxaa = params.get('ranges',{0:0}).get('A_max_a_a',0)
-    aminav = params.get('ranges',{0:0}).get('A_min_a_v',0)
-    amaxav = params.get('ranges',{0:0}).get('A_max_a_v',0)
-    group_id = groups[group_id]#data.get('group_id',0)
-    element = keys[-1]#data.get('element','O')
+    # Extract values
+    aA = params.get('params', {}).get('a_a', 0)
+    aV = params.get('params', {}).get('a_v', 0)
+    ranges = params.get('ranges', {})
+    aminaa = ranges.get('A_min_a_a', 0)
+    amaxaa = ranges.get('A_max_a_a', 0)
+    aminav = ranges.get('A_min_a_v', 0)
+    amaxav = ranges.get('A_max_a_v', 0)
+    element = latest_key
+    group_id = groups.get(group_id_key, '0')
 
-    # Get username from session (set from cookies)
     username = session.get('username', 'Anonymous')
-    
-    # Also try to get username from cookie directly (for cross-origin requests from Jupyter)
-    if not username or username == 'Anonymous':
+    if username == 'Anonymous':
         username = request.cookies.get('username', 'Anonymous')
-    
-    print(f"Received message from user: {username}")
 
-    if group_id:
-        message_data = {
-            #'text': message,
-            'username': username,
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'aA': aA,
-            'aV': aV,
-            'element': element,
-            'group_id': group_id,
-            'A_min_a_a': aminaa,
-            'A_max_a_a': amaxaa,
-            'A_min_a_v': aminav, 
-            'A_max_a_v': amaxav,
-        }
-        messages.append(message_data)
-        
-        # Emit the new message to all connected clients
-        print(f"Emitting message to all clients: {message_data}")
-        socketio.emit('new_message', message_data, namespace='/')
-        print(f"Message emitted successfully")
-        
+    message_data = {
+        'username': username,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'aA': aA,
+        'aV': aV,
+        'element': element,
+        'group_id': group_id,
+        'A_min_a_a': aminaa,
+        'A_max_a_a': amaxaa,
+        'A_min_a_v': aminav,
+        'A_max_a_v': amaxav,
+    }
+
+    messages.append(message_data)
+    socketio.emit('new_message', message_data)
+
+    # Update global results and rebuild complete list
     received_results.update(data)
-    print('results')
-    print(received_results)
     create_messages()
+
     return '', 200
+
 
 @app.route('/api/messages', methods=['GET'])
 def get_messages():
-    """API endpoint to get all messages"""
     return jsonify({'messages': messages})
 
-# Global shutdown control
-shutdown_requested = False
-server_thread = None
 
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
-    """Signal the server to shutdown gracefully"""
     global shutdown_requested
-    
     print("Shutdown requested via endpoint")
     shutdown_requested = True
-    
-    # We need a more graceful shutdown
+
     def delayed_exit():
         import time
-        time.sleep(1)  # Give time for response to be sent
+        time.sleep(1)
         print("Performing clean shutdown...")
-        # Use os._exit for clean exit from thread
-        import os
         os._exit(0)
-    
-    # Start exit in background thread
+
     threading.Thread(target=delayed_exit, daemon=True).start()
-    
     return jsonify({'message': 'Server shutting down gracefully...'}), 200
 
-def run_server():
-    """Run the Flask server"""
-    # Get local IP address for display
-    local_ip = get_local_ip()
-    print(f"Starting server on 0.0.0.0:5001")
-    print(f"Local access: http://localhost:5001")
-    print(f"LAN access: http://{local_ip}:5001")
-    print(f"Note: For internet access, configure port forwarding on your router")
-    
-    socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=False)
 
 def get_local_ip():
-    """Get local IP address"""
     try:
-        # Create a dummy socket to get local IP
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
         return ip
-    except:
+    except Exception:
         return "127.0.0.1"
+
+
+def run_server():
+    local_ip = get_local_ip()
+    print(f"Starting server on 0.0.0.0:5001")
+    print(f"Local access: http://localhost:5001")
+    print(f"LAN access: http://{local_ip}:5001")
+    print(f"Note: For internet access, configure port forwarding on your router")
+
+    socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=False)
+
 
 if __name__ == '__main__':
     run_server()
-        

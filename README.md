@@ -17,9 +17,9 @@ To compile the latest executables follow these instructions:
 3) load the requirements \
 `pip install -r requirements.txt`
 4) run the command \
-`pyinstaller --onefile --windowed --add-data "atomic_mass.txt:." main_window.py` 
+`pyinstaller --clean main_window.spec` 
 5) run the command \
-`pyinstaller --onefile --windowed divulgacion_server/server_gui.py` 
+`pyinstaller --clean server_gui.spec` 
 
 These steps create the executable `main_window` (main app) and `server_gui` (server app) in the directory `dist/` for the current operative system (Windows or Linux). \
 It is assumed that you previously downloaded the repository and have conda, Python and pyinstaller install.
