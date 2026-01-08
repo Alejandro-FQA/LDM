@@ -6,3 +6,4 @@ __pycache__
 divulgacion_server/__pycache__
 divulgacion_server.zip
 documentation/
+!documentation/*.pdf
