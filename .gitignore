@@ -5,5 +5,5 @@ dist/.user_info
 __pycache__
 divulgacion_server/__pycache__
 divulgacion_server.zip
-documentation/
+documentation/*
 !documentation/*.pdf
