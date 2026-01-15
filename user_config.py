@@ -51,7 +51,6 @@ def ensure_user_info_file(user_id):
     # Ensure at least user_id
     if "ID" not in data:
         data["ID"] = user_id
-        data[str(user_id)] = {}
     else:
         user_id = data["ID"]
 
@@ -125,20 +124,27 @@ def save_user_data(self):
 
     element = self.state.element.symbol
     user_id = str(self.state.id)
+    last = 'last'
 
-    # Ensure user ID key exists
-    if user_id not in data:
-        data[user_id] = {}
-    if element not in data[user_id]:
-        data[user_id][element] = {}
-    
+    # Ensure element key exists
+    if element not in data:
+        data[element] = {}
+    # Ensure last key exists
+    if last not in data:
+        data[last] = {}
+
+    # Indicate last saved element
+    data[last] = element
+
     # Ensure sub-dictionaries exist
-    data[user_id][element].setdefault("params", {})
-    data[user_id][element].setdefault("ranges", {})
+    data[element].setdefault("params", {})
+    data[element].setdefault("ranges", {})
+
+    
 
     # Tab 1 → save base parameters
     if self.state.current_tab.__class__.__name__ == "LDMTab":
-        data[user_id][element]["params"].update({
+        data[element]["params"].update({
             "a_v": self.state.params["a_v"],
             "a_s": self.state.params["a_s"],
             "a_c": self.state.params["a_c"],
@@ -150,13 +156,13 @@ def save_user_data(self):
     # Tab 2 → save range information
     elif self.state.current_tab.__class__.__name__ == "activity2_tab":
         if self.activity_index == 1:
-            data[user_id][element]["ranges"].update({
+            data[element]["ranges"].update({
                 "A_min_a_a": self.adjust_spinbox['min'].value(),
                 "A_max_a_a": self.adjust_spinbox['max'].value()
             })
             print('Asymmetry range saved successfully.')
         elif self.activity_index == 2:
-            data[user_id][element]["ranges"].update({
+            data[element]["ranges"].update({
                 "A_min_a_v": self.adjust_spinbox['min'].value(),
                 "A_max_a_v": self.adjust_spinbox['max'].value()
             })
@@ -166,7 +172,7 @@ def save_user_data(self):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
     
-    print('Data saved successfully.')
+    print(f'{element} data saved successfully.')
 
 def load_url(id):
     """Load saved URL for this user ID, if available."""
@@ -194,11 +200,11 @@ def load_user_params(state):
         return None
 
     element = state.element.symbol
-    user_data = data.get(str(state.id), {})
+    user_data = data.get(element)
 
-    print('Data loaded successfully.')
+    print(f'{element} data loaded successfully.')
 
-    return user_data.get(element)
+    return user_data
 
 def send2server(url):
     url_send = f'{url}/send'
@@ -207,6 +213,7 @@ def send2server(url):
     try:
         # Optional: quick check before sending
         response = requests.head(url_send, timeout=3)
+        print(f'response: {response}')
         if response.status_code >= 400:
             print(f"Server reachable but returned {response.status_code}")
             return False

@@ -123,25 +123,25 @@ def create_messages():
     global messages
     complete_data = []
 
-    # Skip the first key if it's something like 'url'
-    keys = [k for k in received_results.keys() if k != 'url']
+    # get keys
+    user_id = received_results.get('ID')
+    elements = [k for k in received_results.keys() if k not in {'ID', 'url', 'last'}]
 
-    for key in keys:
-        for elem in received_results[key]:
-            item = received_results[key][elem]
-            message_data = {
-                'username': session.get('username', 'Anonymous'),
-                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                'aA': item.get('params', {}).get('a_a', 0),
-                'aV': item.get('params', {}).get('a_v', 0),
-                'element': elem,
-                'group_id': groups.get(key, '0'),
-                'A_min_a_a': item.get('ranges', {}).get('A_min_a_a', 0),
-                'A_max_a_a': item.get('ranges', {}).get('A_max_a_a', 0),
-                'A_min_a_v': item.get('ranges', {}).get('A_min_a_v', 0),
-                'A_max_a_v': item.get('ranges', {}).get('A_max_a_v', 0),
-            }
-            complete_data.append(message_data)
+    for element in elements:
+        item = received_results[element]
+        message_data = {
+            'username': session.get('username', 'Anonymous'),
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'aA': item.get('params', {}).get('a_a', 0),
+            'aV': item.get('params', {}).get('a_v', 0),
+            'element': element,
+            'group_id': groups.get(str(user_id), '0'),
+            'A_min_a_a': item.get('ranges', {}).get('A_min_a_a', 0),
+            'A_max_a_a': item.get('ranges', {}).get('A_max_a_a', 0),
+            'A_min_a_v': item.get('ranges', {}).get('A_min_a_v', 0),
+            'A_max_a_v': item.get('ranges', {}).get('A_max_a_v', 0),
+        }
+        complete_data.append(message_data)
 
     messages = complete_data
     socketio.emit('new_data', complete_data)
@@ -154,22 +154,23 @@ def send_message():
     if request.method == 'OPTIONS':
         return '', 204
 
+    # retireve data
     data = request.get_json()
-    group_id_key = str(list(data.keys())[0])  # The key is the client/group ID
-    inner_data = data[group_id_key]
-    latest_key = list(inner_data.keys())[-1]
-    params = inner_data[latest_key]
+    user_id = data['ID']
+    element = data['last']
+    data_element = data[element]
 
     # Extract values
-    aA = params.get('params', {}).get('a_a', 0)
-    aV = params.get('params', {}).get('a_v', 0)
-    ranges = params.get('ranges', {})
+    params = data_element.get('params', {})
+    aA = params.get('a_a', 0)
+    aV = params.get('a_v', 0)
+
+    ranges = data_element.get('ranges', {})
     aminaa = ranges.get('A_min_a_a', 0)
     amaxaa = ranges.get('A_max_a_a', 0)
     aminav = ranges.get('A_min_a_v', 0)
     amaxav = ranges.get('A_max_a_v', 0)
-    element = latest_key
-    group_id = groups.get(group_id_key, '0')
+    group_id = groups.get(str(user_id), '0')
 
     username = session.get('username', 'Anonymous')
     if username == 'Anonymous':

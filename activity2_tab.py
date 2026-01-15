@@ -729,7 +729,7 @@ class activity2_tab(QWidget):
     def update_load_button(self):
         # Enable load button if data exists
         user_data = uc.read_user_info()
-        if self.state.element.symbol in user_data[str(self.state.id)]:
+        if self.state.element.symbol in user_data:
             self.load_button.setEnabled(True)
         else:
             self.load_button.setEnabled(False)
