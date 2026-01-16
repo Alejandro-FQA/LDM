@@ -355,17 +355,20 @@ class LDMTab(QWidget):
 
     def on_send_button_clicked(self):
         """Send parameters to server"""
-        # Ensure user file exists
-        uc.ensure_user_info_file(self.state.id)
+        if self.state.is_connected:
+            # Ensure user file exists
+            uc.ensure_user_info_file(self.state.id)
 
-        # Ensure there are some parameters of current element
-        # otherwise, save current parameters
-        if uc.anyData(self.state):
-            uc.send2server(self.state.server_url)
+            # Ensure there are some parameters of current element
+            # otherwise, save current parameters
+            if uc.anyData(self.state):
+                uc.send2server(self.state.server_url)
+            else:
+                uc.save_user_data(self)
+                self.update_load_button()
+                uc.send2server(self.state.server_url)
         else:
-            uc.save_user_data(self)
-            self.update_load_button()
-            uc.send2server(self.state.server_url)
+            print("Please, connect to a server")
 
     def on_activity_changed(self, index):
         # Update plots
