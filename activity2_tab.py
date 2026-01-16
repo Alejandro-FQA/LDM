@@ -435,11 +435,13 @@ class activity2_tab(QWidget):
             # Ensure there are some parameters of current element
             # otherwise, save current parameters
             if uc.anyData(self.state):
-                uc.send2server(self.state.server_url)
+                if not uc.send2server(self.state.server_url):
+                    self.state.set_connection_status(False)
             else:
                 uc.save_user_data(self)
                 self.update_load_button()
-                uc.send2server(self.state.server_url)
+                if not uc.send2server(self.state.server_url):
+                    self.state.set_connection_status(False)
         else:
             print("Please, connect to a server")
 

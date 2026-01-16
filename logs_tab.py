@@ -67,6 +67,7 @@ class LogsTab(QWidget):
         
         # App_state info
         self.state = app_state
+        self.state.connectionChanged.connect(self.on_connection_changed)
 
         # Main layout
         main_layout = QVBoxLayout(self)
@@ -117,57 +118,35 @@ class LogsTab(QWidget):
         sys.stderr = EmittingStream(self.text_edit, self._orig_stderr, show_time=True)
         
         # Initialize connection state
-        self.is_connected = False
-    
-    # def on_connect_clicked(self):
-    #     """Slot for connect button click."""
-    #     self.state.server_url = self.server_input.text().strip()
-    #     if not self.state.server_url:
-    #         print("Error: Please enter a valid server URL")
-    #         return        
-    
-    #     # Toggle connection state for demonstration
-    #     # In your real implementation, you'll connect to the actual server
-    #     self.state.group = connect2server(user_id=self.state.id, url=self.state.server_url)
-    #     self.is_connected = self.state.group is not None
-    #     self.status_indicator.set_connected(self.is_connected)
-        
-    #     if self.is_connected:
-    #         self.connect_btn.setText("Disconnect")
-    #         # self.connect_btn.setEnabled(False)
-    #         print(f"Connected to server: {self.state.server_url}")
-    #         print(f"Assigned to group: {self.state.group}")
-    #     else:
-    #         self.connect_btn.setText("Connect")
-    #         print(f"Disconnected from server: {self.state.server_url}")
+        self.on_connection_changed(self.state.is_connected)
+
+    def on_connection_changed(self, is_connected):
+        """Update UI based on connection status."""
+        self.status_indicator.set_connected(is_connected)
+        if is_connected:
+            self.connect_btn.setText("Disconnect")
+        else:
+            self.connect_btn.setText("Connect")
 
     def on_connect_clicked(self):
         """Slot for connect button click to toggle connection state."""
-    
-        if not self.is_connected:
+        if not self.state.is_connected:
             # --- CONNECTION LOGIC ---
             self.state.server_url = self.server_input.text().strip()
             if not self.state.server_url:
                 print("Error: Please enter a valid server URL")
-                return        
+                return
 
             # Attempt to connect
             self.state.group = connect2server(user_id=self.state.id, url=self.state.server_url)
-            self.is_connected = True
-            
+            is_connected = self.state.group is not None
+            self.state.set_connection_status(is_connected)
+
+            if is_connected:
+                print(f"Connected to server: {self.state.server_url}")
+                print(f"Assigned to group: {self.state.group}")
         else:
             # --- DISCONNECTION LOGIC ---
             self.state.group = disconnect2server(user_id=self.state.id, group_id=self.state.group)
-            self.is_connected = False
+            self.state.set_connection_status(False)
             print("Successfully disconnected.")
-
-        # --- UI UPDATES (Applied based on resulting state) ---
-        self.status_indicator.set_connected(self.is_connected)
-        
-        if self.is_connected:
-            self.connect_btn.setText("Disconnect")
-            print(f"Connected to server: {self.state.server_url}")
-            print(f"Assigned to group: {self.state.group}")
-        else:
-            self.connect_btn.setText("Connect")
-            print(f"App is currently disconnected.")

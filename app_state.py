@@ -77,11 +77,10 @@ class AppState(QObject):
 
     @property
     def is_connected(self):
-        return self._group
+        return self._is_connected
 
-    @is_connected.setter
-    def is_connected(self, value):
-        if value != self._group:
-            self._is_connected = value
-            self.connectionChanged.emit(value)
+    def set_connection_status(self, is_connected):
+        if is_connected != self._is_connected:
+            self._is_connected = is_connected
+            self.connectionChanged.emit(is_connected)
    
