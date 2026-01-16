@@ -52,6 +52,7 @@ class activity2_tab(QWidget):
         self.state.parameterChanged.connect(self.on_param_changed)
         self.state.languageChanged.connect(self.on_language_changed)
         self.state.elementChanged.connect(self.on_element_changed)
+        self.state.connectionChanged.connect(self.on_connection_changed)
 
         # Activity sections
         self.sections = [
@@ -445,6 +446,11 @@ class activity2_tab(QWidget):
         else:
             print("Please, connect to a server")
 
+    def on_connection_changed(self, is_connected):
+        """Update UI based on connection status."""
+        current_index = self.toolbox.currentIndex()
+        self.on_activity_changed(current_index)
+
     def on_activity_changed(self, index):
         # Update plots
         self.activity_index = index
@@ -483,7 +489,7 @@ class activity2_tab(QWidget):
                 for key, label in self.adjust_label.items():
                     label.setText(f"<html>A<sub>{key}</sub><sup>(<i>aₐ</i>)</sup> =</html>")
                     
-                self.send_button.setEnabled(True)
+                self.send_button.setEnabled(self.state.is_connected)
                 self.save_button.setEnabled(True)
 
             case 2:            
@@ -501,7 +507,7 @@ class activity2_tab(QWidget):
                 for key, label in self.adjust_label.items():
                     label.setText(f"<html>A<sub>{key}</sub><sup>(<i>aᵥ</i>)</sup> =</html>")
 
-                self.send_button.setEnabled(True)
+                self.send_button.setEnabled(self.state.is_connected)
                 self.save_button.setEnabled(True)
 
     def on_adjust_spinbox_changed(self):

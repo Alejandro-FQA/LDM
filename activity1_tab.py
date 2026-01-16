@@ -49,6 +49,7 @@ class LDMTab(QWidget):
         self.state.parameterChanged.connect(self.on_param_changed)
         self.state.languageChanged.connect(self.on_language_changed)
         self.state.elementChanged.connect(self.on_element_changed)
+        self.state.connectionChanged.connect(self.on_connection_changed)
 
         # Activity sections
         self.sections = [
@@ -372,6 +373,11 @@ class LDMTab(QWidget):
         else:
             print("Please, connect to a server")
 
+    def on_connection_changed(self, is_connected):
+        """Update UI based on connection status."""
+        current_index = self.toolbox.currentIndex()
+        self.on_activity_changed(current_index)
+
     def on_activity_changed(self, index):
         # Update plots
         self.activity_index = index
@@ -407,7 +413,7 @@ class LDMTab(QWidget):
                     else:
                         checker.setChecked(True)
 
-                self.send_button.setEnabled(True)
+                self.send_button.setEnabled(self.state.is_connected)
 
                 # 30 Elements from O to Sr
                 group = self.state.group or 1
@@ -421,7 +427,7 @@ class LDMTab(QWidget):
                     else:
                         checker.setChecked(True)
 
-                self.send_button.setEnabled(True)
+                self.send_button.setEnabled(self.state.is_connected)
 
                 # 30 Elements from O to Sr
                 group = self.state.group or 1
@@ -435,7 +441,7 @@ class LDMTab(QWidget):
                     else:
                         checker.setChecked(True)
 
-                self.send_button.setEnabled(True)
+                self.send_button.setEnabled(self.state.is_connected)
 
                 # 30 Elements from O to Sr
                 group = self.state.group or 1
