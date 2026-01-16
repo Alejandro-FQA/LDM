@@ -117,6 +117,17 @@ def connect2server(user_id, url):
 
     return group  
 
+def disconnect2server(user_id, group_id):
+    """
+    Local disconnection logic. 
+    Since the server uses persistent unique IDs, we simply 
+    clear the local group reference and return None.
+    """
+    print(f"Local state reset: User {user_id} unassigned from group {group_id}.")
+    
+    # We return None to signify that the 'group' is now empty/disconnected
+    return None
+
 def save_user_data(self):
     """Save current element parameters under this user ID in .user_info."""
     path = get_user_info_path()

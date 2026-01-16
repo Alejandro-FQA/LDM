@@ -9,7 +9,7 @@ from PyQt5.QtGui import QPainter, QBrush, QColor
 
 
 from app_state import AppState
-from user_config import connect2server, load_url
+from user_config import connect2server, load_url, disconnect2server
 
 
 class StatusIndicator(QLabel):
@@ -119,24 +119,55 @@ class LogsTab(QWidget):
         # Initialize connection state
         self.is_connected = False
     
-    def on_connect_clicked(self):
-        """Slot for connect button click."""
-        self.state.server_url = self.server_input.text().strip()
-        if not self.state.server_url:
-            print("Error: Please enter a server URL")
-            return        
+    # def on_connect_clicked(self):
+    #     """Slot for connect button click."""
+    #     self.state.server_url = self.server_input.text().strip()
+    #     if not self.state.server_url:
+    #         print("Error: Please enter a valid server URL")
+    #         return        
     
-        # Toggle connection state for demonstration
-        # In your real implementation, you'll connect to the actual server
-        self.state.group = connect2server(user_id=self.state.id, url=self.state.server_url)
-        self.is_connected = self.state.group is not None
+    #     # Toggle connection state for demonstration
+    #     # In your real implementation, you'll connect to the actual server
+    #     self.state.group = connect2server(user_id=self.state.id, url=self.state.server_url)
+    #     self.is_connected = self.state.group is not None
+    #     self.status_indicator.set_connected(self.is_connected)
+        
+    #     if self.is_connected:
+    #         self.connect_btn.setText("Disconnect")
+    #         # self.connect_btn.setEnabled(False)
+    #         print(f"Connected to server: {self.state.server_url}")
+    #         print(f"Assigned to group: {self.state.group}")
+    #     else:
+    #         self.connect_btn.setText("Connect")
+    #         print(f"Disconnected from server: {self.state.server_url}")
+
+    def on_connect_clicked(self):
+        """Slot for connect button click to toggle connection state."""
+    
+        if not self.is_connected:
+            # --- CONNECTION LOGIC ---
+            self.state.server_url = self.server_input.text().strip()
+            if not self.state.server_url:
+                print("Error: Please enter a valid server URL")
+                return        
+
+            # Attempt to connect
+            self.state.group = connect2server(user_id=self.state.id, url=self.state.server_url)
+            self.is_connected = True
+            
+        else:
+            # --- DISCONNECTION LOGIC ---
+            self.state.group = disconnect2server(user_id=self.state.id, group_id=self.state.group)
+            self.is_connected = False
+            print("Successfully disconnected.")
+
+        # --- UI UPDATES (Applied based on resulting state) ---
         self.status_indicator.set_connected(self.is_connected)
         
         if self.is_connected:
-            self.connect_btn.setText("Connected")
-            self.connect_btn.setEnabled(False)
+            self.connect_btn.setText("Disconnect")
             print(f"Connected to server: {self.state.server_url}")
             print(f"Assigned to group: {self.state.group}")
         else:
             self.connect_btn.setText("Connect")
-            print(f"Disconnected from server: {self.state.server_url}")
+            print(f"App is currently disconnected.")
