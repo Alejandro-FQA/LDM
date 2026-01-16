@@ -294,9 +294,9 @@ class ServerGUI(QMainWindow):
                 """
                 self.messages_display.append(display_text)
                 
-            self.messages_display.verticalScrollBar().setValue(
-                self.messages_display.verticalScrollBar().maximum()
-            )
+            # self.messages_display.verticalScrollBar().setValue(
+            #     self.messages_display.verticalScrollBar().maximum()
+            # )
             
         except ImportError as e:
             self.messages_display.append(f"Error importing messages: {str(e)}")
