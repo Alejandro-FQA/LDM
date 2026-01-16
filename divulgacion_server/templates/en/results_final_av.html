@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Physics Activity - Results Dashboard</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2em;
+        }
+        
+        h2 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .back-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+        }
+        
+        /* Two column layout for histogram and activity feed */
+        .two-column-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        /* Section 1: Histogram */
+        .histogram-container {
+            height: 350px;
+        }
+        
+        /* Section 2: Activity Feed */
+        .activity-feed {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .activity-message {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .activity-message .emoji {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
+        .activity-details {
+            font-size: 13px;
+            color: #666;
+            margin-top: 6px;
+        }
+        
+        .activity-timestamp {
+            font-size: 11px;
+            color: #999;
+            font-style: italic;
+            margin-top: 6px;
+        }
+        
+        /* Section 3: Elements Grid */
+        .elements-grid {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .element-box {
+            background: #ccc;
+            border-radius: 10px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .element-box.completed {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            animation: pulse 0.5s ease-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1.05);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        .element-symbol {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        
+        .element-number {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .element-box.completed .element-number {
+            opacity: 0.9;
+        }
+        
+        .element-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-indicator.connected {
+            background: #4CAF50;
+            animation: pulseStatus 2s infinite;
+        }
+        
+        .status-indicator.disconnected {
+            background: #f44336;
+        }
+        
+        @keyframes pulseStatus {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .connection-status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            display: flex;
+            align-items: center;
+        }
+        
+        .debug-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🔬 Nuclear Physics Activity Results</h1>
+                <div class="connection-status">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Connecting...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Two Column Layout: Histogram and Activity Feed -->
+        <div class="two-column-section">
+            <!-- Section 1: Histogram of aV values -->
+            <div class="section">
+                <h2>📊 Parameter Distribution</h2>
+                <div class="histogram-container">
+                    <canvas id="avHistogram"></canvas>
+                </div>
+            </div>
+            
+            <!-- Section 2: Activity Feed -->
+            <div class="section">
+                <h2>🎯 Group Activity</h2>
+                <div class="activity-feed" id="activityFeed">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div>No results yet...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 3: Elements Progress -->
+        <div class="section">
+            <h2>⚛️ Adjusted Elements (O to Rb)</h2>
+            <div class="elements-grid" id="elementsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Results page loaded - initializing...');
+        
+        // Element list from app.py (O to Ti)
+        const ELEMENTS = [
+            { symbol: 'O', name: 'Oxygen', z: 8 },
+            { symbol: 'F', name: 'Fluorine', z: 9 },
+            { symbol: 'Ne', name: 'Neon', z: 10 },
+            { symbol: 'Na', name: 'Sodium', z: 11 },
+            { symbol: 'Mg', name: 'Magnesium', z: 12 },
+            { symbol: 'Al', name: 'Aluminum', z: 13 },
+            { symbol: 'Si', name: 'Silicon', z: 14 },
+            { symbol: 'P', name: 'Phosphorus', z: 15 },
+            { symbol: 'S', name: 'Sulfur', z: 16 },
+            { symbol: 'Cl', name: 'Chlorine', z: 17 },
+            { symbol: 'Ar', name: 'Argon', z: 18 },
+            { symbol: 'K', name: 'Potassium', z: 19 },
+            { symbol: 'Ca', name: 'Calcium', z: 20 },
+            { symbol: 'Sc', name: 'Scandium', z: 21 },
+            { symbol: 'Ti', name: 'Titanium', z: 22 },
+            { symbol: 'V', name: 'Vanadium', z: 23 },
+            { symbol: 'Cr', name: 'Chromium', z: 24 },
+            { symbol: 'Mn', name: 'Manganese', z: 25 },
+            { symbol: 'Fe', name: 'Iron', z: 26 },
+            { symbol: 'Co', name: 'Cobalt', z: 27 },
+            { symbol: 'Ni', name: 'Nickel', z: 28 },
+            { symbol: 'Cu', name: 'Copper', z: 29 },
+            { symbol: 'Zn', name: 'Zinc', z: 30 },
+            { symbol: 'Ga', name: 'Gallium', z: 31 },
+            { symbol: 'Ge', name: 'Germanium', z: 32 },
+            { symbol: 'As', name: 'Arsenic', z: 33 },
+            { symbol: 'Se', name: 'Selenium', z: 34 },
+            { symbol: 'Br', name: 'Bromine', z: 35 },
+            { symbol: 'Kr', name: 'Krypton', z: 36 },
+            { symbol: 'Rb', name: 'Rubidium', z: 37 }
+        ];
+        
+        // Data storage
+        let allMessages = [];
+        let avValues = [];
+        let elementCompletions = {};
+        let chart = null;
+        
+        // Debug info element
+        
+        // Initialize Socket.IO connection
+        const socket = io();
+        
+        // Socket connection events
+        socket.on('connect', function() {
+            console.log('Socket.IO connected!');
+            document.getElementById('statusText').textContent = 'Live Results';
+            document.getElementById('statusIndicator').className = 'status-indicator connected';
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Socket.IO disconnected');
+            document.getElementById('statusText').textContent = 'Disconnected - Reconnecting...';
+        });
+        
+        socket.on('connect_error', function(error) {
+            console.error('Socket.IO connection error:', error);
+        });
+        
+        // Initialize elements grid
+        function initElementsGrid() {
+            const grid = document.getElementById('elementsGrid');
+            grid.innerHTML = '';
+            
+            ELEMENTS.forEach(element => {
+                const box = document.createElement('div');
+                box.className = 'element-box';
+                box.id = `element-${element.symbol}`;
+                box.innerHTML = `
+                    <div class="element-symbol">${element.symbol}</div>
+                    <div class="element-number">Z=${element.z}</div>
+                    <div class="element-count" id="count-${element.symbol}" style="display: none;">0</div>
+                `;
+                grid.appendChild(box);
+            });
+        }
+        
+        // Initialize histogram
+        function initHistogram() {
+            const ctx = document.getElementById('avHistogram').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: [],
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'V Value (MeV)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        title: {
+                            display: true,
+                            text: 'Responses for Volume Term (V)'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update histogram with aV values
+        function updateHistogram() {
+            if (!avValues || avValues.length === 0) return;
+
+            const binSize = 0.1;
+            
+            // Determine number of decimal places for proper rounding
+            const decimals = binSize.toString().split('.')[1]?.length || 0;
+            
+            // Helper function to round to avoid floating point errors
+            const roundTo = (num, places) => {
+                const factor = Math.pow(10, places);
+                return Math.round(num * factor) / factor;
+            };
+
+            // Compute min and max
+            let minVal = Math.min(...avValues);
+            let maxVal = Math.max(...avValues);
+
+            // Round to nearest bin center, then shift by half binSize to get bin edge
+            // For binSize=0.1: centers at 15.0, 15.1, 15.2, edges at 14.95, 15.05, 15.15
+            const minCenter = Math.floor(minVal / binSize) * binSize;
+            const maxCenter = Math.ceil(maxVal / binSize) * binSize;
+            
+            // Bin edges start at center - binSize/2
+            const halfBin = binSize / 2;
+            minVal = roundTo(minCenter - halfBin, decimals + 1);
+            maxVal = roundTo(maxCenter + halfBin, decimals + 1);
+
+            // Calculate number of bins
+            const binCount = Math.round((maxVal - minVal) / binSize);
+            const bins = new Array(binCount).fill(0);
+
+            // Fill bins - each bin is [edge, edge+binSize)
+            for (const val of avValues) {
+                const idx = Math.floor(roundTo((val - minVal) / binSize, decimals + 1));
+                if (idx >= 0 && idx < bins.length) {
+                    bins[idx]++;
+                } else if (idx === bins.length) {
+                    bins[bins.length - 1]++; // catch edge case for max value
+                }
+            }
+
+            // Generate labels (bin centers) with proper decimal formatting
+            // Bin i goes from [minVal + i*binSize, minVal + (i+1)*binSize)
+            // Center is at minVal + i*binSize + binSize/2
+            const labels = bins.map((_, i) => {
+                const binCenter = minVal + i * binSize + halfBin;
+                return roundTo(binCenter, decimals).toFixed(decimals);
+            });
+
+            // Update chart
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = bins;
+            chart.update();
+        }
+        
+        // Parse message to extract parameters
+        function parseMessage(message) {
+            const result = {
+                aA: null,
+                aV: null,
+                element: null
+            };
+            
+            // Format: "aA=20.0, aV=16.2, element=O"
+            const aAMatch = message.aA//messageText.match(/aA=([\d.]+)/);
+            const aVMatch = message.aV//messageText.match(/aV=([\d.]+)/);
+            const elementMatch = message.element//messageText.match(/element=(\w+)/);
+            //const ID_user = message.group_id//messageText.match(/ID=(\d+)/);
+            
+            if (aAMatch) result.aA = parseFloat(aAMatch);
+            if (aVMatch) result.aV = parseFloat(aVMatch);
+            if (elementMatch) result.element = elementMatch;
+            //if (ID_user) result.user_id = ID_user;
+            
+            return result;
+        }
+        
+        // Add activity to feed
+        function addActivityItem(message, isNew = false) {
+            const feed = document.getElementById('activityFeed');
+            const emptyState = feed.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const params = parseMessage(message);
+            const username = message.group_id// message.username || 'Anonymous';
+            const element = params.element || 'Unknown';
+
+            const activityDiv = document.createElement('div');
+            activityDiv.className = 'activity-item';
+            
+            let activityMessage = `<span class="emoji">🎉</span><strong>Group ${escapeHtml(username)} </strong> found parameters for: ${escapeHtml(element)}!`;
+            
+            activityDiv.innerHTML = `
+                <div class="activity-message">${activityMessage}</div>
+                <div class="activity-details">
+                    Element: <strong>${escapeHtml(element)}</strong> | 
+                    aV: <strong>${params.aV !== null ? params.aV.toFixed(2) : 'N/A'}</strong> MeV | 
+                    aA: <strong>${params.aA !== null ? params.aA.toFixed(2) : 'N/A'}</strong> MeV
+                </div>
+                <div class="activity-timestamp">📅 ${message.timestamp}</div>
+            `;
+            
+            if (isNew) {
+                feed.insertBefore(activityDiv, feed.firstChild);
+            } else {
+                feed.appendChild(activityDiv);
+            }
+        }
+        
+        // Update element box
+        function updateElementBox(element) {
+            if (!element) return;
+            
+            const box = document.getElementById(`element-${element}`);
+            if (box) {
+                box.classList.add('completed');
+                
+                const countEl = document.getElementById(`count-${element}`);
+                if (countEl) {
+                    const count = elementCompletions[element] || 0;
+                    countEl.textContent = count;
+                    countEl.style.display = 'flex';
+                }
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const uniqueStudents = new Set(allMessages.map(m => m.username)).size;
+            const completedElements = Object.keys(elementCompletions).length;
+            
+            document.getElementById('totalSubmissions').textContent = allMessages.length;
+            document.getElementById('uniqueStudents').textContent = uniqueStudents;
+            document.getElementById('elementsCompleted').textContent = completedElements;
+        }
+        
+        // Process all messages
+        function processMessages(messages) {
+            allMessages = messages;
+            avValues = [];
+            elementCompletions = {};
+            
+            messages.forEach(msg => {
+                const params = parseMessage(msg);
+                
+                // Collect aV values
+                if (params.aV !== null) {
+                    avValues.push(params.aV);
+                }
+                
+                // Track element completions
+                if (params.element) {
+                    if (!elementCompletions[params.element]) {
+                        elementCompletions[params.element] = 0;
+                    }
+                    elementCompletions[params.element]++;
+                }
+            });
+            
+            // Update all sections
+            updateHistogram();
+            // updateStats();
+            
+            // Update elements grid
+            Object.keys(elementCompletions).forEach(element => {
+                updateElementBox(element);
+            });
+        }
+        
+        // Load existing messages on page load
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/messages');
+                const data = await response.json();
+                console.log('Loaded messages:', data.messages);
+                
+                // Display messages in reverse order (newest first)
+                const reversedMessages = [...data.messages].reverse();
+                reversedMessages.forEach(msg => {
+                    addActivityItem(msg, false);
+                });
+                
+                // Process all messages for stats and histogram
+                processMessages(data.messages);
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        async function reloadMessages() {
+            try {
+                const response = await fetch('/api/messages');
+                const data = await response.json();
+                console.log('Loaded messages:', data.messages);
+                
+                // Display messages in reverse order (newest first)
+                
+                // Process all messages for stats and histogram
+                processMessages(data.messages);
+                
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+        
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Listen for new messages via Socket.IO
+        socket.on('new_message', function(message) {
+            console.log('New message received via socket:', message);
+            
+            // Add to activity feed
+            addActivityItem(message, true);
+        });
+
+        socket.on('new_data', function(message){
+            // Update data structures
+            console.log('Complete data received')
+            console.log(message)
+            reloadMessages();
+        });
+        
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            console.log('Page load complete, initializing...');
+            initElementsGrid();
+            initHistogram();
+            loadMessages();
+        });
+    </script>
+</body>
+</html>

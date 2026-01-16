@@ -224,7 +224,6 @@ def send2server(url):
     try:
         # Optional: quick check before sending
         response = requests.head(url_send, timeout=3)
-        print(f'response: {response}')
         if response.status_code >= 400:
             print(f"Server reachable but returned {response.status_code}")
             return False
