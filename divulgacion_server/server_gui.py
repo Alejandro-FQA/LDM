@@ -1,15 +1,17 @@
-import sys
-import threading
-import webbrowser
+import functools
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QPushButton, QTextEdit, QLabel, 
-                             QGroupBox, QLineEdit)
+                             QGroupBox, QLineEdit, QComboBox)
 from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 import socket
 from datetime import datetime
 
 import functools
 from flask import request
+
+import sys
+import threading
+import webbrowser
 
 # Import your Flask app
 try:
@@ -41,7 +43,7 @@ class ServerThread(QObject):
         self.thread = None
         self.should_stop = False
         
-    def run_server(self, host='0.0.0.0', port=5001):
+    def run_server(self, host='0.0.0.0', port=5001, language='ca'):
         """Run the Flask server in a separate thread"""
         # Reset stop flag for new start
         self.should_stop = False
@@ -50,11 +52,11 @@ class ServerThread(QObject):
             self.running = True
             server_url = f"http://{host}:{port}"
             self.server_started.emit(server_url)
-            self.log_message.emit(f"[{datetime.now().strftime('%H:%M:%S')}] Starting server on {server_url}")
+            self.log_message.emit(f"[{datetime.now().strftime('%H:%M:%S')}] Starting server on {server_url} with language '{language}'")
             
             # Import and run the server function
             from server import run_server
-            run_server()
+            run_server(language=language)
             
         except SystemExit:
             # This is expected when server shuts down via os._exit()
@@ -111,6 +113,17 @@ class ServerGUI(QMainWindow):
         control_group = QGroupBox("Server Control")
         control_layout = QVBoxLayout()
         
+        # Language selection
+        language_layout = QHBoxLayout()
+        language_layout.addWidget(QLabel("Language:"))
+        self.language_combo = QComboBox()
+        self.language_combo.addItem("Catalan", "ca")
+        self.language_combo.addItem("Spanish", "es")
+        self.language_combo.addItem("English", "en")
+        language_layout.addWidget(self.language_combo)
+        language_layout.addStretch()
+        control_layout.addLayout(language_layout)
+
         # URL display
         url_layout = QHBoxLayout()
         url_layout.addWidget(QLabel("Server URL:"))
@@ -193,10 +206,13 @@ class ServerGUI(QMainWindow):
         
         self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] Starting server...")
         
+        # Get selected language
+        selected_language = self.language_combo.currentData()
+        
         # Create new worker and thread
         self.worker = ServerThread()
         self.server_thread = threading.Thread(
-            target=self.worker.run_server,
+            target=functools.partial(self.worker.run_server, language=selected_language),
             daemon=True
         )
         

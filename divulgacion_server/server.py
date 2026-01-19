@@ -72,17 +72,17 @@ def index():
 
 @app.route('/results_av')
 def results_av():
-    return render_template('results_final_av_cat.html')
+    return render_template('results_final_av.html')
 
 
 @app.route('/results_aa')
 def results_aa():
-    return render_template('results_final_aa_cat.html')
+    return render_template('results_final_aa.html')
 
 
 @app.route('/results_estable')
 def results_estable():
-    return render_template('results_final_estable_cat.html')
+    return render_template('results_final_estable.html')
 
 
 @app.route('/download')
@@ -231,9 +231,16 @@ def get_local_ip():
         return "127.0.0.1"
 
 
-def run_server():
+def run_server(language='ca'):
+    # Dynamically set the template folder based on the chosen language
+    if getattr(sys, 'frozen', False):
+        app.template_folder = os.path.join(sys._MEIPASS, 'divulgacion_server', 'templates', language)
+    else:
+        app.template_folder = os.path.join(os.path.dirname(__file__), 'templates', language)
+
     local_ip = get_local_ip()
-    print(f"Starting server on 0.0.0.0:5001")
+    print(f"Starting server on 0.0.0.0:5001 with language '{language}'")
+    print(f"Template folder set to: {app.template_folder}")
     print(f"Local access: http://localhost:5001")
     print(f"LAN access: http://{local_ip}:5001")
     print(f"Note: For internet access, configure port forwarding on your router")
