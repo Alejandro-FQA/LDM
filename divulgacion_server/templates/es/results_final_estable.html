@@ -151,20 +151,60 @@
             font-size: 14px;
             opacity: 0.9;
         }
+
+        .navbar {
+            background-color: #5a67d8; /* A slightly darker shade of purple-blue */
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 0px; /* Space from the header */
+            margin-bottom: 10px; /* Space below the navbar */
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .navbar a:hover {
+            background-color: #7b92e6; /* Lighter on hover */
+            transform: translateY(-2px);
+        }
+
+        .navbar a.active {
+            background-color: #434190; /* Even darker for the active link */
+            font-weight: bold;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚛️ Resultados de la actividad de estabilidad de isótopos</h1>
+                <h1>⚛️ Resultados de la Actividad de Estabilidad de Isótopos</h1>
                 <div class="connection-status">
                     <span class="status-indicator" id="statusIndicator"></span>
-                    <span id="statusText">Conectando...</span>
+                    <span id="statusText">Resultados en directo</span>
                 </div>
             </div>
             <!-- <a href="/" class="back-btn">← Back to Main</a> -->
         </div>
+
+        <nav class="navbar">
+            <a href="/results_av">Actividad 1c</a>
+            <a href="/results_aa">Actividad 1d</a>
+            <a href="/results_estable" class="active">Actividad 2</a>
+        </nav>
         
         <!-- Statistics -->
         <div class="stats-row">

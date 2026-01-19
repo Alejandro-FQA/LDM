@@ -290,25 +290,65 @@
             font-size: 14px;
             opacity: 0.9;
         }
+
+        .navbar {
+            background-color: #5a67d8; /* A slightly darker shade of purple-blue */
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 0px; /* Space from the header */
+            margin-bottom: 10px; /* Space below the navbar */
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .navbar a:hover {
+            background-color: #7b92e6; /* Lighter on hover */
+            transform: translateY(-2px);
+        }
+
+        .navbar a.active {
+            background-color: #434190; /* Even darker for the active link */
+            font-weight: bold;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>🔬 Resultats de l'activitat de física nuclear</h1>
+                <h1>🔬 Resultats de l'Activitat de Física Nuclear</h1>
                 <div class="connection-status">
                     <span class="status-indicator" id="statusIndicator"></span>
                     <span id="statusText">Connectant...</span>
                 </div>
             </div>
         </div>
+
+        <nav class="navbar">
+            <a href="/results_av">Activitat 1c</a>
+            <a href="/results_aa" class="active">Activitat 1d</a>
+            <a href="/results_estable">Activitat 2</a>
+        </nav>
         
         <!-- Two Column Layout: Histogram and Activity Feed -->
         <div class="two-column-section">
             <!-- Section 1: Histogram of aV values -->
             <div class="section">
-                <h2>📊 Distribució de paràmetres</h2>
+                <h2>📊 Distribució de paràmetres (a<sub>a</sub>) </h2>
                 <div class="histogram-container">
                     <canvas id="avHistogram"></canvas>
                 </div>
@@ -316,7 +356,7 @@
             
             <!-- Section 2: Activity Feed -->
             <div class="section">
-                <h2>🎯 Activitat dels grups</h2>
+                <h2>🎯 Activitat de Grup</h2>
                 <div class="activity-feed" id="activityFeed">
                     <div class="empty-state">
                         <div class="empty-state-icon">🔍</div>
@@ -390,7 +430,7 @@
         
         socket.on('disconnect', function() {
             console.log('Socket.IO disconnected');
-            document.getElementById('statusText').textContent = 'Disconnected - Reconnecting...';
+            document.getElementById('statusText').textContent = 'Desconnectat - Reconectant...';
         });
         
         socket.on('connect_error', function(error) {
@@ -423,7 +463,7 @@
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Nombre d\'estudiantes',
+                        label: 'Nombre d\'estudiants',
                         data: [],
                         backgroundColor: 'rgba(102, 126, 234, 0.7)',
                         borderColor: 'rgba(102, 126, 234, 1)',
@@ -443,7 +483,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Valor A (MeV)'
+                                text: 'Valor a<sub>a</sub> (MeV)'
                             }
                         }
                     },
@@ -453,7 +493,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'Respostes per al terme d\'asimetria (A)'
+                            text: 'Respostes per al terme d\'asimetria'
                         }
                     }
                 }
@@ -562,14 +602,14 @@
                 // Text for consonant elements
                 //activityMessage = `<span class="emoji">🎉</span><strong>El grup ${escapeHtml(username)} </strong> ha trobat els paràmetres per al ${escapeHtml(element)}!`;
             //}
-            let activityMessage = `<span class="emoji">🎉</span><strong>El grup ${escapeHtml(username)} </strong> ha trobat les paràmetres per: ${escapeHtml(element)}!`;
+            let activityMessage = `<span class="emoji">🎉</span><strong>El grup ${escapeHtml(username)} </strong> ha trobat els paràmetres per: ${escapeHtml(element)}!`;
             
             activityDiv.innerHTML = `
                 <div class="activity-message">${activityMessage}</div>
                 <div class="activity-details">
                     Element: <strong>${escapeHtml(element)}</strong> | 
-                    aV: <strong>${params.aV !== null ? params.aV.toFixed(2) : 'N/A'}</strong> MeV | 
-                    aA: <strong>${params.aA !== null ? params.aA.toFixed(2) : 'N/A'}</strong> MeV
+                    aA: <strong>${params.aA !== null ? params.aA.toFixed(2) : 'N/A'}</strong> MeV | 
+                    aV: <strong>${params.aV !== null ? params.aV.toFixed(2) : 'N/A'}</strong> MeV
                 </div>
                 <div class="activity-timestamp">📅 ${message.timestamp}</div>
             `;

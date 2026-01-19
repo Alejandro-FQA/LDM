@@ -290,25 +290,65 @@
             font-size: 14px;
             opacity: 0.9;
         }
+
+        .navbar {
+            background-color: #5a67d8; /* A slightly darker shade of purple-blue */
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 0px; /* Space from the header */
+            margin-bottom: 10px; /* Space below the navbar */
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .navbar a:hover {
+            background-color: #7b92e6; /* Lighter on hover */
+            transform: translateY(-2px);
+        }
+
+        .navbar a.active {
+            background-color: #434190; /* Even darker for the active link */
+            font-weight: bold;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>🔬 Resultados de la actividad de física nuclear</h1>
+                <h1>🔬 Resultados de la Actividad de Física Nuclear</h1>
                 <div class="connection-status">
                     <span class="status-indicator" id="statusIndicator"></span>
                     <span id="statusText">Conectando...</span>
                 </div>
             </div>
         </div>
+
+        <nav class="navbar">
+            <a href="/results_av" class="active">Actividad 1c</a>
+            <a href="/results_aa">Actividad 1d</a>
+            <a href="/results_estable">Actividad 2</a>
+        </nav>
         
         <!-- Two Column Layout: Histogram and Activity Feed -->
         <div class="two-column-section">
             <!-- Section 1: Histogram of aV values -->
             <div class="section">
-                <h2>📊 Distribución de parámetros</h2>
+                <h2>📊 Distribución de parámetros (a<sub>v</sub>) </h2>
                 <div class="histogram-container">
                     <canvas id="avHistogram"></canvas>
                 </div>
@@ -316,7 +356,7 @@
             
             <!-- Section 2: Activity Feed -->
             <div class="section">
-                <h2>🎯 Actividad de los grupos</h2>
+                <h2>🎯 Actividad de Grupo</h2>
                 <div class="activity-feed" id="activityFeed">
                     <div class="empty-state">
                         <div class="empty-state-icon">🔍</div>
@@ -443,7 +483,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Valor V (MeV)'
+                                text: 'Valor a<sub>v</sub> (MeV)'
                             }
                         }
                     },
@@ -453,7 +493,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'Respuestas para el término de Volumen (V)'
+                            text: 'Respuestas para el término de Volumen'
                         }
                     }
                 }
@@ -559,8 +599,8 @@
             activityDiv.innerHTML = `
                 <div class="activity-message">${activityMessage}</div>
                 <div class="activity-details">
-                    Elemento: <strong>${escapeHtml(element)}</strong> | 
-                    aV: <strong>${params.aV !== null ? params.aV.toFixed(2) : 'N/A'}</strong> MeV | 
+                    Elemento: <strong>${escapeHtml(element)}</strong> |
+                    aV: <strong>${params.aV !== null ? params.aV.toFixed(2) : 'N/A'}</strong> MeV |
                     aA: <strong>${params.aA !== null ? params.aA.toFixed(2) : 'N/A'}</strong> MeV
                 </div>
                 <div class="activity-timestamp">📅 ${message.timestamp}</div>

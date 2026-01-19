@@ -151,20 +151,60 @@
             font-size: 14px;
             opacity: 0.9;
         }
+
+        .navbar {
+            background-color: #5a67d8; /* A slightly darker shade of purple-blue */
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 0px; /* Space from the header */
+            margin-bottom: 10px; /* Space below the navbar */
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+
+        .navbar a:hover {
+            background-color: #7b92e6; /* Lighter on hover */
+            transform: translateY(-2px);
+        }
+
+        .navbar a.active {
+            background-color: #434190; /* Even darker for the active link */
+            font-weight: bold;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>⚛️ Resultats de l'activitat d'estabilitat de isòtops</h1>
+                <h1>⚛️ Resultats de l'Activitat d'Estabilitat d'Isòtops</h1>
                 <div class="connection-status">
                     <span class="status-indicator" id="statusIndicator"></span>
-                    <span id="statusText">Connecting...</span>
+                    <span id="statusText">Connectant...</span>
                 </div>
             </div>
             <!-- <a href="/" class="back-btn">← Back to Main</a> -->
         </div>
+
+        <nav class="navbar">
+            <a href="/results_av">Activitat 1c</a>
+            <a href="/results_aa">Activitat 1d</a>
+            <a href="/results_estable" class="active">Activitat 2</a>
+        </nav>
         
         <!-- Statistics -->
         <div class="stats-row">
@@ -226,7 +266,7 @@
         
         socket.on('disconnect', function() {
             console.log('Socket.IO disconnected');
-            document.getElementById('statusText').textContent = 'Disconnected - Reconnecting...';
+            document.getElementById('statusText').textContent = 'Desconnectat - Reconectant...';
             document.getElementById('statusIndicator').className = 'status-indicator disconnected';
         });
         
@@ -297,7 +337,7 @@
                 data: {
                     datasets: [
                         {
-                            label: 'Binding Energy per Nucleon (LDM)',
+                            label: 'Energia d\'enllaç per Nucleó (LDM)',
                             data: precomputedBE,
                             borderColor: 'rgba(102, 126, 234, 1)',
                             backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -328,7 +368,7 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'energia d\'enllaç per Nucleon (MeV)',
+                                text: 'Energia d\'enllaç per Nucleó (MeV)',
                                 font: {
                                     size: 14
                                 }
@@ -344,7 +384,7 @@
                         },
                         title: {
                             display: true,
-                            text: 'Estabilitat Nulcear: BE/A vs Nombre màssic'
+                            text: 'Estabilitat Nuclear: BE/A vs Nombre màssic'
                         },
                         tooltip: {
                             mode: 'nearest',
@@ -472,7 +512,7 @@
                     borderWidth: 2,
                     label: {
                         display: true,
-                        content: 'a_a Range',
+                        content: 'Rang a_a',
                         position: 'start',
                         color: 'rgba(255, 99, 132, 1)',
                         font: {
@@ -491,7 +531,7 @@
                     borderWidth: 2,
                     label: {
                         display: true,
-                        content: 'a_v Range',
+                        content: 'Rang a_v',
                         position: 'start',
                         color: 'rgba(75, 192, 192, 1)',
                         font: {
