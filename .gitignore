@@ -1,5 +1,5 @@
-.LDM/*
-build/*
+.LDM/
+build/
 dist/.user_info
 .user_info
 __pycache__
