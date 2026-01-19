@@ -375,6 +375,7 @@ class activity2_tab(QWidget):
         # Update language
         self.update_language()
         self.translate_gui()
+        self.update_plots()
         # Update language box
         self.language_box.blockSignals(True)
         self.language_box.setCurrentIndex(self.languages_list.index(self.state.language))
