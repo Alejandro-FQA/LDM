@@ -31,6 +31,7 @@ from elements_diccionaries import elements_label as els_lab
 import user_config as uc
 from ldm_model import ldm_model
 from element import Element
+from gui_translations import TRANSLATIONS
 
 def load_activity_module(language: str, activity_number: int):
     module_path = f"activities.{language}.activity{activity_number}_{language}"
@@ -55,11 +56,7 @@ class activity2_tab(QWidget):
         self.state.connectionChanged.connect(self.on_connection_changed)
 
         # Activity sections
-        self.sections = [
-            ("intro", "Introducció"),
-            ("section1", "Activitat 2a - Incertesa del Paràmetre d'Asimetria"),
-            ("section2", "Activitat 2b - Incertesa del Paràmetre de Volum")
-        ]
+        self.sections = []
 
         # Default activity
         self.activity_mod = load_activity_module(self.state.language, 2)
@@ -142,7 +139,7 @@ class activity2_tab(QWidget):
         for key in ['min', 'max']:
             pair_layout = QHBoxLayout()
 
-            label = QLabel(f"<html>A<sub>{key}</sub> =</html>")
+            label = QLabel()
             label.setFixedWidth(65)
 
             spinbox = QSpinBox()
@@ -153,7 +150,7 @@ class activity2_tab(QWidget):
             spinbox.valueChanged.connect(self.on_adjust_spinbox_changed)
             spinbox.setEnabled(False)
 
-            button = QPushButton('Fixa')
+            button = QPushButton()
             button.setFixedWidth(65)
             button.clicked.connect(lambda _, k=key: self.on_set_button_clicked(k))
             button.setEnabled(False)
@@ -173,10 +170,10 @@ class activity2_tab(QWidget):
 
 
         # ----------------- Sliders area -----------------
-        sliders_title = QLabel("Paràmetres del Model de la Gota Líquida (MeV)")
-        sliders_title.setAlignment(Qt.AlignCenter) 
+        self.sliders_title = QLabel()
+        self.sliders_title.setAlignment(Qt.AlignCenter) 
         sliders_layout = QVBoxLayout()
-        left_layout.addWidget(sliders_title)
+        left_layout.addWidget(self.sliders_title)
         left_layout.addLayout(sliders_layout, stretch=1)
 
         # Define parameter-specific ranges and scaling
@@ -246,16 +243,16 @@ class activity2_tab(QWidget):
         right_layout = QVBoxLayout(right_widget)
 
         # Title label with styling
-        title_label = QLabel("Predicció dels Isòtops més pesats")
-        title_label.setAlignment(Qt.AlignCenter)
-        title_label.setStyleSheet("""
+        self.title_label = QLabel()
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("""
             QLabel {
                 font-size: 24px;
                 font-weight: bold;
             }
         """)
 
-        right_layout.addWidget(title_label)
+        right_layout.addWidget(self.title_label)
 
         # ----------------- Text area -----------------
         # Text box on the right with instructions
@@ -266,6 +263,7 @@ class activity2_tab(QWidget):
                 
         self.activity_index = self.toolbox.currentIndex()
 
+        self.sections = TRANSLATIONS[self.state.language]["activity2_tab"]["sections"]
         for section_key, title in self.sections:            
             text_browser = QTextBrowser()
             text_browser.setHtml(activity[section_key])
@@ -280,11 +278,11 @@ class activity2_tab(QWidget):
         button_layout = QHBoxLayout()
         
         # Create buttons
-        self.reset_button = QPushButton("Reseteja")
-        self.save_button = QPushButton("Desa")
-        self.load_button = QPushButton("Carrega")
-        self.send_button = QPushButton("Envia")
-        self.info_button = QPushButton("ⓘ")      
+        self.reset_button = QPushButton()
+        self.save_button = QPushButton()
+        self.load_button = QPushButton()
+        self.send_button = QPushButton()
+        self.info_button = QPushButton()      
 
         self.send_button.setEnabled(False) 
         self.save_button.setEnabled(False)
@@ -336,6 +334,7 @@ class activity2_tab(QWidget):
         self.state.set_element('O')
         # self.reset_parameters()
         self.update_plots()
+        self.translate_gui()
                 
     # -----------------------------
     # Tab signal
@@ -351,7 +350,7 @@ class activity2_tab(QWidget):
 
         # Create a popup message box
         msg = QMessageBox(self)
-        msg.setWindowTitle("-- Informació --")
+        msg.setWindowTitle(self.translations["info_popup_title"])
         msg.setText(self.activity_mod.get_info())
         msg.setIcon(QMessageBox.Information)
 
@@ -375,6 +374,7 @@ class activity2_tab(QWidget):
         """When language changes, update UI texts."""
         # Update language
         self.update_language()
+        self.translate_gui()
         # Update language box
         self.language_box.blockSignals(True)
         self.language_box.setCurrentIndex(self.languages_list.index(self.state.language))
@@ -469,7 +469,7 @@ class activity2_tab(QWidget):
                     button.setEnabled(False)
 
                 for key, label in self.adjust_label.items():
-                    label.setText(f"<html>A<sub>{key}</sub> =</html>")
+                    label.setText(f"<html>{self.translations['adjust_label_' + key]}<sub>{key}</sub> =</html>")
 
                 self.send_button.setEnabled(False)
                 self.save_button.setEnabled(False)
@@ -487,7 +487,7 @@ class activity2_tab(QWidget):
                     button.setEnabled(True)
 
                 for key, label in self.adjust_label.items():
-                    label.setText(f"<html>A<sub>{key}</sub><sup>(<i>aₐ</i>)</sup> =</html>")
+                    label.setText(f"<html>{self.translations['adjust_label_' + key]}<sub>{key}</sub><sup>(<i>aₐ</i>)</sup> =</html>")
                     
                 self.send_button.setEnabled(self.state.is_connected)
                 self.save_button.setEnabled(True)
@@ -505,7 +505,7 @@ class activity2_tab(QWidget):
                     button.setEnabled(True)
 
                 for key, label in self.adjust_label.items():
-                    label.setText(f"<html>A<sub>{key}</sub><sup>(<i>aᵥ</i>)</sup> =</html>")
+                    label.setText(f"<html>{self.translations['adjust_label_' + key]}<sub>{key}</sub><sup>(<i>aᵥ</i>)</sup> =</html>")
 
                 self.send_button.setEnabled(self.state.is_connected)
                 self.save_button.setEnabled(True)
@@ -690,15 +690,15 @@ class activity2_tab(QWidget):
 
         # Top plot
         self.ax1.clear()
-        self.ax1.plot(A, B, "bo", label="Experimental", markersize=4)
-        self.ax1.plot(A_model, B_model, "r-", label="Model Gota Líquida")
+        self.ax1.plot(A, B, "bo", label=self.translations["plot1_legend_experimental"], markersize=4)
+        self.ax1.plot(A_model, B_model, "r-", label=self.translations["plot1_legend_model"])
         self.ax1.axhline(0, color="gray", linestyle="--")
         self.ax1.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
         self.ax1.set_xlim(x_min, x_max)
         self.ax1.set_ylim(y_min, y_max)
-        self.ax1.set_xlabel("Nombre màssic \n $A$")
-        self.ax1.set_ylabel("Energia d'enllaç \n $BE / A$ (MeV)")
-        self.ax1.set_title("Gràfica 1")
+        self.ax1.set_xlabel(self.translations["plot1_xlabel"])
+        self.ax1.set_ylabel(self.translations["plot1_ylabel"])
+        self.ax1.set_title(self.translations["plot1_title"])
         self.ax1.legend(loc = 'upper right')
         self.ax1.grid(True)
 
@@ -709,7 +709,7 @@ class activity2_tab(QWidget):
         self.ax1.axvline(x=A_model[idx_max], 
                             color='limegreen', 
                             linestyle='--',
-                            label = 'Isòtop més pesat')
+                            label = self.translations["plot1_legend_heaviest_isotope"])
         self.ax1.legend(loc='upper right',
                         fontsize=10           # Font size
                         ) 
@@ -722,6 +722,26 @@ class activity2_tab(QWidget):
             
     def update_language(self):
         self.activity_mod = load_activity_module(self.state.language, 2)
+
+    def translate_gui(self):
+        self.translations = TRANSLATIONS[self.state.language]["activity2_tab"]
+        self.title_label.setText(self.translations["title"])
+        self.sliders_title.setText(self.translations["sliders_title"])
+        self.reset_button.setText(TRANSLATIONS[self.state.language]["ldm_tab"]["buttons"]["reset"])
+        self.save_button.setText(TRANSLATIONS[self.state.language]["ldm_tab"]["buttons"]["save"])
+        self.load_button.setText(TRANSLATIONS[self.state.language]["ldm_tab"]["buttons"]["load"])
+        self.send_button.setText(TRANSLATIONS[self.state.language]["ldm_tab"]["buttons"]["send"])
+        self.info_button.setText(TRANSLATIONS[self.state.language]["ldm_tab"]["buttons"]["info"])
+
+        self.adjust_set_button['min'].setText(self.translations["adjust_button_text"])
+        self.adjust_set_button['max'].setText(self.translations["adjust_button_text"])
+        self.adjust_label['min'].setText(f"<html>{self.translations['adjust_label_min']}<sub>min</sub> =</html>")
+        self.adjust_label['max'].setText(f"<html>{self.translations['adjust_label_max']}<sub>max</sub> =</html>")
+
+        self.sections = self.translations["sections"]
+        for i, (section_key, title) in enumerate(self.sections):
+            self.toolbox.setItemText(i, title)
+
 
     def update_text(self):
         # Update text when there's

@@ -23,6 +23,8 @@ from activity1_tab import LDMTab
 from activity2_tab import activity2_tab
 from logs_tab import LogsTab
 
+from gui_translations import TRANSLATIONS
+
 # Force Qt to use X11 for compatibility
 os.environ["QT_QPA_PLATFORM"] = "xcb"
 
@@ -71,20 +73,29 @@ class PlotWindow(QMainWindow):
 
         # 🔌 CONNECT STATE SIGNALS
         self.state.groupChanged.connect(self.update_title)
+        self.state.languageChanged.connect(self.translate_gui)
         # Set initial title
         self.update_title()
 
         # Tab 1 and 2: Interactive LDM model
-        self.tabs.addTab(LDMTab(self.state), "Activitat 1")
-        self.tabs.addTab(activity2_tab(self.state), "Activitat 2")        
-        self.tabs.addTab(LogsTab(self.state), "Logs")
+        self.tab1 = LDMTab(self.state)
+        self.tabs.addTab(self.tab1, "Activity 1")
+        self.tab2 = activity2_tab(self.state)
+        self.tabs.addTab(self.tab2, "Activity 2")
+        self.tab3 = LogsTab(self.state)
+        self.tabs.addTab(self.tab3, "Logs")
 
-        # Tab 3–5: simple placeholders
-        # A = np.random.rand(1,20)
-        # B = np.random.rand(1,20)
-        # colors = ["red", "green", "purple"]
-        # for i, c in enumerate(colors, start=3):
-        #     self.tabs.addTab(SimplePlotTab(A, B, color=c, title=f"Activitat {i}"), f"Activitat {i}")
+        self.translate_gui(self.state.language)
+
+
+    def translate_gui(self, language):
+        """Translate all GUI elements in the main window."""
+        translations = TRANSLATIONS[language]
+        self.setWindowTitle(translations["window_title"])
+        self.tabs.setTabText(0, translations["activity1_tab_title"])
+        self.tabs.setTabText(1, translations["activity2_tab_title"])
+        self.tabs.setTabText(2, translations["logs_tab_title"])
+
 
     def update_title(self):
         """Update window title with current group."""
