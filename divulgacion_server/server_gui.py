@@ -8,6 +8,7 @@ from datetime import datetime
 
 import functools
 from flask import request
+import requests # Added for making HTTP requests
 
 import sys
 import threading
@@ -120,6 +121,7 @@ class ServerGUI(QMainWindow):
         self.language_combo.addItem("Catalan", "ca")
         self.language_combo.addItem("Spanish", "es")
         self.language_combo.addItem("English", "en")
+        self.language_combo.currentIndexChanged.connect(self.change_server_language) # Connect signal
         language_layout.addWidget(self.language_combo)
         language_layout.addStretch()
         control_layout.addLayout(language_layout)
@@ -349,6 +351,31 @@ class ServerGUI(QMainWindow):
         """Clear the log display"""
         self.log_display.clear()
         
+    def change_server_language(self):
+        """
+        Sends a request to the Flask server to change its active language.
+        This is called when the language combo box selection changes.
+        """
+        if self.worker and self.worker.running:
+            selected_language = self.language_combo.currentData()
+            server_url = f"http://{self.get_local_ip()}:5001/set_server_language"
+            
+            try:
+                self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] Attempting to change server language to '{selected_language}'...")
+                response = requests.post(server_url, json={'lang': selected_language}, timeout=5)
+                if response.status_code == 200:
+                    self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] Server language successfully changed to '{selected_language}'.")
+                else:
+                    self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] Failed to change server language: {response.status_code} - {response.text}")
+            except requests.exceptions.ConnectionError:
+                self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] ERROR: Could not connect to server to change language. Is it running?")
+            except requests.exceptions.Timeout:
+                self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] ERROR: Request to change server language timed out.")
+            except Exception as e:
+                self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] ERROR: An unexpected error occurred while changing server language: {str(e)}")
+        else:
+            self.log_message(f"[{datetime.now().strftime('%H:%M:%S')}] Server not running. Language will be set on next startup.")
+
     def closeEvent(self, event):
         """Handle window close event"""
         if self.worker and self.worker.running:

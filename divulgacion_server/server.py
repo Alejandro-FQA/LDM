@@ -7,7 +7,7 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from flask_socketio import SocketIO, emit
-
+import jinja2 # Import jinja2
 
 def create_app():
     # Determine the correct template folder depending on frozen or normal run
@@ -40,6 +40,39 @@ lock = threading.Lock()
 shutdown_requested = False
 server_thread = None
 
+# Language settings
+SUPPORTED_LANGUAGES = ['ca', 'es', 'en']
+current_language = 'ca' # Default language
+
+def _set_template_folder_for_language(lang):
+    """
+    Sets the Flask app's template folder based on the given language.
+    Updates the global current_language.
+    Also, forces Flask's Jinja2 environment to reload its template loader
+    and clear its cache, ensuring templates are loaded from the new path.
+    """
+    global current_language
+    if lang not in SUPPORTED_LANGUAGES:
+        print(f"Warning: Language '{lang}' not supported. Using default '{current_language}'.")
+        lang = current_language # Revert to current if invalid
+        
+    if getattr(sys, 'frozen', False):
+        # PyInstaller bundle: templates are extracted to sys._MEIPASS/divulgacion_server/templates/<lang>
+        new_template_path = os.path.join(sys._MEIPASS, 'divulgacion_server', 'templates', lang)
+    else:
+        # Development: relative to this file (server.py)
+        new_template_path = os.path.join(os.path.dirname(__file__), 'templates', lang)
+    
+    app.template_folder = new_template_path
+    current_language = lang
+    
+    # Force Jinja2 environment to reload templates from the new path
+    with app.app_context():
+        # Clear the cache first
+        app.jinja_env.cache = {}
+        # Recreate the FileSystemLoader with the new path
+        app.jinja_env.loader = jinja2.FileSystemLoader(new_template_path)
+    
 
 # CORS headers for all responses
 @app.after_request
@@ -49,7 +82,7 @@ def after_request(response):
         response.headers.add('Access-Control-Allow-Origin', origin)
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        response.add_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     return response
 
 
@@ -232,21 +265,27 @@ def get_local_ip():
 
 
 def run_server(language='ca'):
-    # Dynamically set the template folder based on the chosen language
-    if getattr(sys, 'frozen', False):
-        app.template_folder = os.path.join(sys._MEIPASS, 'divulgacion_server', 'templates', language)
-    else:
-        app.template_folder = os.path.join(os.path.dirname(__file__), 'templates', language)
+    # Set the template folder based on the chosen language
+    _set_template_folder_for_language(language)
 
     local_ip = get_local_ip()
-    print(f"Starting server on 0.0.0.0:5001 with language '{language}'")
-    print(f"Template folder set to: {app.template_folder}")
+    print(f"Starting server on 0.0.0.0:5001 with language '{current_language}'")
     print(f"Local access: http://localhost:5001")
     print(f"LAN access: http://{local_ip}:5001")
     print(f"Note: For internet access, configure port forwarding on your router")
 
     socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=False)
 
+@app.route('/set_server_language', methods=['POST'])
+def set_server_language():
+    data = request.get_json()
+    new_lang = data.get('lang')
+
+    if new_lang and new_lang in SUPPORTED_LANGUAGES:
+        _set_template_folder_for_language(new_lang)
+        return jsonify({"status": "success", "message": f"Language set to {new_lang}"}), 200
+    else:
+        return jsonify({"status": "error", "message": "Invalid or missing language"}), 400
 
 if __name__ == '__main__':
     run_server()
