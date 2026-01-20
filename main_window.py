@@ -26,7 +26,7 @@ from logs_tab import LogsTab
 from gui_translations import TRANSLATIONS
 
 # Force Qt to use X11 for compatibility
-os.environ["QT_QPA_PLATFORM"] = "xcb"
+# os.environ["QT_QPA_PLATFORM"] = "xcb"  # -- Comment out in Windows
 
 # -----------------------------
 # Other placeholder tabs

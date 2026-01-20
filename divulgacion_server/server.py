@@ -274,7 +274,7 @@ def run_server(language='ca'):
     print(f"LAN access: http://{local_ip}:5001")
     print(f"Note: For internet access, configure port forwarding on your router")
 
-    socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=5001, debug=False, use_reloader=False, allow_unsafe_werkzeug=True)
 
 @app.route('/set_server_language', methods=['POST'])
 def set_server_language():

@@ -84,10 +84,10 @@ pyinstaller==6.16.0
 pyinstaller-hooks-contrib==2025.9
 pyparsing==3.2.5
 PyQt5==5.15.11
-PyQt5-Qt5==5.15.17
+PyQt5-Qt5
 PyQt5_sip==12.17.1
 PyQtWebEngine==5.15.7
-PyQtWebEngine-Qt5==5.15.17
+PyQtWebEngine-Qt5
 python-dateutil==2.9.0.post0
 python-engineio==4.12.3
 python-json-logger==4.0.0

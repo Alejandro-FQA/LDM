@@ -1,13 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 import os
+from PyQt5.QtCore import QLibraryInfo
 
 a = Analysis(
     ['divulgacion_server/server_gui.py'],
     pathex=[os.path.abspath(os.getcwd())],  # Add project root to help find local modules
     binaries=[],
     datas=[
-        ('divulgacion_server/templates', 'divulgacion_server/templates'),  # If you have templates
-        # Add other data files if needed, e.g. static files
+        ('divulgacion_server/templates', 'divulgacion_server/templates'),
+        (os.path.join(QLibraryInfo.location(QLibraryInfo.PluginsPath), 'platforms'), 'platforms'),
     ],
     hiddenimports=[
         'flask_socketio',

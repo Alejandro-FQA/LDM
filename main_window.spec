@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
+from PyQt5.QtCore import QLibraryInfo
 
 a = Analysis(
     ['main_window.py'],
@@ -8,6 +9,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('atomic_mass.txt', '.'),
+        (os.path.join(QLibraryInfo.location(QLibraryInfo.PluginsPath), 'platforms'), 'platforms'),
     ],
     hiddenimports=[
         'activities',                     # Top-level package
