@@ -2,8 +2,26 @@
 build/
 dist/.user_info
 .user_info
+text
 __pycache__
 divulgacion_server/__pycache__
 divulgacion_server.zip
+
+# Ignore all files inside documentation/
 documentation/*
-!documentation/*.pdf
+
+# But DO NOT ignore the subdirectories (ca, en, es)
+# This allows Git to enter them and look for files
+!documentation/ca/
+!documentation/en/
+!documentation/es/
+
+# Now ignore everything inside those subdirectories...
+documentation/ca/*
+documentation/en/*
+documentation/es/*
+
+# ...Except for the PDF files
+!documentation/ca/*.pdf
+!documentation/en/*.pdf
+!documentation/es/*.pdf

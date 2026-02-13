@@ -483,7 +483,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Valor a<sub>v</sub> (MeV)'
+                                text: 'Valor aᵥ (MeV)'
                             }
                         }
                     },
@@ -738,6 +738,18 @@
             initElementsGrid();
             initHistogram();
             loadMessages();
+        });
+        // Listen for language change event from server
+        socket.on('language_changed', function(data) {
+            console.log('Language changed to:', data.lang);
+            // Reload the page to apply the new language templates
+            window.location.reload();
+        });
+        // Listen for language change event from server
+        socket.on('language_changed', function(data) {
+            console.log('Language changed to:', data.lang);
+            // Reload the page to apply the new language templates
+            window.location.reload();
         });
     </script>
 </body>

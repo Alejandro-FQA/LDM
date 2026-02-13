@@ -593,6 +593,12 @@
             initChart();
             loadMessages();
         });
+        // Listen for language change event from server
+        socket.on('language_changed', function(data) {
+            console.log('Language changed to:', data.lang);
+            // Reload the page to apply the new language templates
+            window.location.reload();
+        });
     </script>
 </body>
 </html>

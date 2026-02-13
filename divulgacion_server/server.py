@@ -32,8 +32,8 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Global variables
 shutdown_flag = threading.Event()
-messages = []
-received_results = {}
+messages = [] # This should be the full chronological log
+# received_results = {}
 groups = {}
 group_counter = 0
 lock = threading.Lock()
@@ -151,34 +151,41 @@ def create_group():
             return jsonify({"group_id": str(group_counter)})
 
 
-def create_messages():
-    """Rebuild the complete messages list from received_results"""
-    global messages
-    complete_data = []
+# def create_messages():
+#     """Rebuild the complete messages list from received_results"""
+#     global messages
+#     complete_data = []
 
-    # get keys
-    user_id = received_results.get('ID')
-    elements = [k for k in received_results.keys() if k not in {'ID', 'url', 'last'}]
+#     # get keys
+#     user_id = received_results.get('ID')
+#     elements = [k for k in received_results.keys() if k not in {'ID', 'url', 'last'}]
 
-    for element in elements:
-        item = received_results[element]
-        message_data = {
-            'username': session.get('username', 'Anonymous'),
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'aA': item.get('params', {}).get('a_a', 0),
-            'aV': item.get('params', {}).get('a_v', 0),
-            'element': element,
-            'group_id': groups.get(str(user_id), '0'),
-            'A_min_a_a': item.get('ranges', {}).get('A_min_a_a', 0),
-            'A_max_a_a': item.get('ranges', {}).get('A_max_a_a', 0),
-            'A_min_a_v': item.get('ranges', {}).get('A_min_a_v', 0),
-            'A_max_a_v': item.get('ranges', {}).get('A_max_a_v', 0),
-        }
-        complete_data.append(message_data)
+#     for element in elements:
+#         item = received_results[element]
+#         message_data = {
+#             'username': session.get('username', 'Anonymous'),
+#             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+#             'aA': item.get('params', {}).get('a_a', 0),
+#             'aV': item.get('params', {}).get('a_v', 0),
+#             'element': element,
+#             'group_id': groups.get(str(user_id), '0'),
+#             'A_min_a_a': item.get('ranges', {}).get('A_min_a_a', 0),
+#             'A_max_a_a': item.get('ranges', {}).get('A_max_a_a', 0),
+#             'A_min_a_v': item.get('ranges', {}).get('A_min_a_v', 0),
+#             'A_max_a_v': item.get('ranges', {}).get('A_max_a_v', 0),
+#         }
+#         complete_data.append(message_data)
 
-    messages = complete_data
-    socketio.emit('new_data', complete_data)
+#     messages = complete_data
+#     socketio.emit('new_data', complete_data)
 
+def emit_full_message_history():
+    """
+    Emits the current complete list of historical messages via the 'new_data' event.
+    This ensures the client receives the full log for accurate state reconstruction.
+    """
+    print(f"Emitting 'new_data' event with {len(messages)} historical messages.")
+    socketio.emit('new_data', messages)
 
 @app.route('/send', methods=['POST', 'OPTIONS', 'HEAD'])
 def send_message():
@@ -221,19 +228,44 @@ def send_message():
         'A_min_a_v': aminav,
         'A_max_a_v': amaxav,
     }
+    
+    with lock:
+        # Check if this group has already sent data for this specific element
+        found = False
+        for i, msg in enumerate(messages):
+            if msg.get('group_id') == group_id and msg.get('element') == element:
+                # Replace the old entry with the updated one
+                messages[i] = message_data
+                found = True
+                break
+    
+    if not found:
+        # If no previous entry exists for this group/element, add it
+        messages.append(message_data)
 
-    messages.append(message_data)
+    # Append the new message to the global log
+    # messages.append(message_data)
+
+    # Emit the individual new message for real-time updates 
     socketio.emit('new_message', message_data)
 
-    # Update global results and rebuild complete list
-    received_results.update(data)
-    create_messages()
-
+    # # Update global results and rebuild complete list
+    # received_results.update(data)
+    # create_messages()
+    # The original code updated received_results and then called create_messages() which overwrote the global messages list.                                                                                       │
+    # This is being corrected:                                                                            
+    # received_results.update(data) # This line and subsequent logic in create_messages caused data loss. 
+                                                                                                          
+    # Instead, to trigger a full refresh for all clients (if that's the intended purpose of new_data),    
+    # we now call a function that emits the entire current 'messages' log.                                
+    emit_full_message_history()                                                                           
+                                                                                                          
     return '', 200
 
 
 @app.route('/api/messages', methods=['GET'])
 def get_messages():
+    # This endpoint now correctly returns the cumulative log of all messages.
     return jsonify({'messages': messages})
 
 

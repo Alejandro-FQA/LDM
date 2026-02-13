@@ -335,6 +335,10 @@
                     <span class="status-indicator" id="statusIndicator"></span>
                     <span id="statusText">Connectant...</span>
                 </div>
+                <!-- New element for global message count -->
+                <div class="message-counter">
+                    Missatges rebuts: <span id="globalMessageCount">0</span>
+                </div>
             </div>
         </div>
 
@@ -376,7 +380,7 @@
     <script>
         console.log('Results page loaded - initializing...');
         
-        // Element list from app.py (O to Ti)
+        // Element list from app.py (O to Rb)
         const ELEMENTS = [
             { symbol: 'O', name: 'Oxygen', z: 8 },
             { symbol: 'F', name: 'Fluorine', z: 9 },
@@ -483,7 +487,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Valor a<sub>a</sub> (MeV)'
+                                text: 'Valor aₐ (MeV)'
                             }
                         }
                     },
@@ -658,12 +662,12 @@
                 const params = parseMessage(msg);
                 
                 // Collect aV values
-                if (params.aV !== null && params.aA > 2) {
-                    avValues.push(params.aA);
-                //}
+                if (params.aV !== null) {
+                    avValues.push(params.aV);
+                }
                 
                 // Track element completions
-                //if (params.element) {
+                if (params.element) {
                     if (!elementCompletions[params.element]) {
                         elementCompletions[params.element] = 0;
                     }
@@ -731,6 +735,16 @@
             
             // Add to activity feed
             addActivityItem(message, true);
+            
+            // Update the counter for the element
+            const params = parseMessage(message);
+            if (params.element) {
+                if (!elementCompletions[params.element]) {
+                    elementCompletions[params.element] = 0;
+                }
+                elementCompletions[params.element]++;
+                updateElementBox(params.element);
+            }
         });
 
         socket.on('new_data', function(message){
@@ -740,12 +754,24 @@
             reloadMessages();
         });
         
+        // Listen for global message count updates
+        socket.on('message_count_update', function(data) {
+            console.log('Global message count updated:', data.count);
+            document.getElementById('globalMessageCount').textContent = data.count;
+        });
+        
         // Initialize on page load
         window.addEventListener('load', function() {
             console.log('Page load complete, initializing...');
             initElementsGrid();
             initHistogram();
             loadMessages();
+        });
+        // Listen for language change event from server
+        socket.on('language_changed', function(data) {
+            console.log('Language changed to:', data.lang);
+            // Reload the page to apply the new language templates
+            window.location.reload();
         });
     </script>
 </body>

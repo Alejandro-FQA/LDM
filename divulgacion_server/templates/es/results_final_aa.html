@@ -483,7 +483,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Valor a<sub>a</sub> (MeV)'
+                                text: 'Valor aₐ (MeV)'
                             }
                         }
                     },
@@ -650,12 +650,12 @@
                 const params = parseMessage(msg);
                 
                 // Collect aV values
-                if (params.aV !== null && params.aA > 2) {
-                    avValues.push(params.aA);
-                //}
+                if (params.aV !== null) {
+                    avValues.push(params.aV);
+                }
                 
                 // Track element completions
-                //if (params.element) {
+                if (params.element) {
                     if (!elementCompletions[params.element]) {
                         elementCompletions[params.element] = 0;
                     }
@@ -738,6 +738,12 @@
             initElementsGrid();
             initHistogram();
             loadMessages();
+        });
+        // Listen for language change event from server
+        socket.on('language_changed', function(data) {
+            console.log('Language changed to:', data.lang);
+            // Reload the page to apply the new language templates
+            window.location.reload();
         });
     </script>
 </body>
